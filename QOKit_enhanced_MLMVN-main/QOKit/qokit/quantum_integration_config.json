@@ -1,0 +1,1301 @@
+{
+  "framework_analysis": {
+    "matrix.py": {
+      "file_name": "matrix.py",
+      "classes": [],
+      "functions": [
+        "kron"
+      ],
+      "keywords": [],
+      "complexity_score": 2
+    },
+    "dicke_state_utils.py": {
+      "file_name": "dicke_state_utils.py",
+      "classes": [],
+      "functions": [
+        "get_ring_xy_mixer",
+        "fracAngle",
+        "shiftup",
+        "blocki",
+        "blockii",
+        "SCS",
+        "U",
+        "dicke_simple",
+        "dicke_divide_conquer"
+      ],
+      "keywords": [
+        "quantum_simulation"
+      ],
+      "complexity_score": 28
+    },
+    "perf_utils.py": {
+      "file_name": "perf_utils.py",
+      "classes": [],
+      "functions": [
+        "set_timer",
+        "timeit"
+      ],
+      "keywords": [],
+      "complexity_score": 4
+    },
+    "qaoa_objective_portfolio.py": {
+      "file_name": "qaoa_objective_portfolio.py",
+      "classes": [],
+      "functions": [
+        "get_qaoa_portfolio_objective",
+        "scaled_result",
+        "rescaled_f"
+      ],
+      "keywords": [
+        "quantum_simulation",
+        "neural_network",
+        "benchmarking",
+        "optimization"
+      ],
+      "complexity_score": 10
+    },
+    "portfolio_optimization.py": {
+      "file_name": "portfolio_optimization.py",
+      "classes": [],
+      "functions": [
+        "convert_bitstring_to_int",
+        "get_configuration_cost",
+        "get_configuration_cost_kw",
+        "po_obj_func",
+        "kbits",
+        "portfolio_brute_force",
+        "get_data",
+        "get_problem",
+        "get_problem_H",
+        "get_problem_H_bf",
+        "hamming_weight",
+        "yield_all_indices_cosntrained",
+        "get_sk_ini",
+        "alignment_para_to_qokit_scale"
+      ],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "visualization",
+        "neural_network",
+        "optimization"
+      ],
+      "complexity_score": 41
+    },
+    "yahoo.py": {
+      "file_name": "yahoo.py",
+      "classes": [
+        "YahooDataProvider"
+      ],
+      "functions": [],
+      "keywords": [
+        "data_processing"
+      ],
+      "complexity_score": 12
+    },
+    "qaoa_circuit_sk.py": {
+      "file_name": "qaoa_circuit_sk.py",
+      "classes": [],
+      "functions": [
+        "get_qaoa_circuit",
+        "get_parameterized_qaoa_circuit"
+      ],
+      "keywords": [
+        "quantum_simulation",
+        "neural_network"
+      ],
+      "complexity_score": 2
+    },
+    "qaoa_circuit_portfolio.py": {
+      "file_name": "qaoa_circuit_portfolio.py",
+      "classes": [],
+      "functions": [
+        "generate_dicke_state_fast",
+        "get_cost_circuit",
+        "get_dicke_init",
+        "get_mixer_Txy",
+        "get_mixer_RX",
+        "get_qaoa_circuit",
+        "get_parameterized_qaoa_circuit",
+        "get_energy_expectation",
+        "get_energy_expectation_sv",
+        "invert_counts",
+        "measure_circuit",
+        "circuit_measurement_function",
+        "f"
+      ],
+      "keywords": [
+        "quantum_simulation",
+        "neural_network",
+        "optimization"
+      ],
+      "complexity_score": 42
+    },
+    "sk.py": {
+      "file_name": "sk.py",
+      "classes": [],
+      "functions": [
+        "sk_obj",
+        "get_sk_terms",
+        "get_random_J"
+      ],
+      "keywords": [
+        "optimization",
+        "neural_network"
+      ],
+      "complexity_score": 3
+    },
+    "qaoa_circuit_labs.py": {
+      "file_name": "qaoa_circuit_labs.py",
+      "classes": [],
+      "functions": [
+        "get_qaoa_circuit",
+        "get_parameterized_qaoa_circuit"
+      ],
+      "keywords": [
+        "quantum_simulation",
+        "neural_network",
+        "optimization"
+      ],
+      "complexity_score": 2
+    },
+    "parameter_utils.py": {
+      "file_name": "parameter_utils.py",
+      "classes": [
+        "QAOAParameterization"
+      ],
+      "functions": [
+        "to_basis",
+        "from_basis",
+        "extrapolate_parameters_in_fourier_basis",
+        "convert_to_gamma_beta",
+        "_get_sk_gamma_beta_from_file",
+        "_get_sk_gamma_beta",
+        "get_sk_gamma_beta",
+        "_get_gamma_beta_from_file",
+        "get_fixed_gamma_beta",
+        "get_best_known_parameters_for_LABS_wrt_overlap",
+        "get_best_known_parameters_for_LABS_wrt_overlap_for_p"
+      ],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "visualization",
+        "neural_network",
+        "optimization"
+      ],
+      "complexity_score": 35
+    },
+    "qaoa_objective_sk.py": {
+      "file_name": "qaoa_objective_sk.py",
+      "classes": [],
+      "functions": [
+        "get_qaoa_sk_objective"
+      ],
+      "keywords": [
+        "quantum_simulation",
+        "neural_network",
+        "benchmarking",
+        "optimization"
+      ],
+      "complexity_score": 4
+    },
+    "qaoa_objective_maxcut.py": {
+      "file_name": "qaoa_objective_maxcut.py",
+      "classes": [],
+      "functions": [
+        "get_qaoa_maxcut_objective"
+      ],
+      "keywords": [
+        "visualization",
+        "quantum_simulation",
+        "neural_network",
+        "benchmarking",
+        "optimization"
+      ],
+      "complexity_score": 4
+    },
+    "generator.py": {
+      "file_name": "generator.py",
+      "classes": [],
+      "functions": [
+        "get_energy_term_indices_SK",
+        "get_graph_SK",
+        "get_energy_term_indices_max_q_xor"
+      ],
+      "keywords": [
+        "visualization",
+        "quantum_simulation",
+        "neural_network"
+      ],
+      "complexity_score": 6
+    },
+    "qaoa_circuit.py": {
+      "file_name": "qaoa_circuit.py",
+      "classes": [],
+      "functions": [
+        "append_z_prod_term",
+        "append_x_term",
+        "append_cost_operator_circuit",
+        "append_mixer_operator_circuit",
+        "get_qaoa_circuit_from_terms",
+        "get_parameterized_qaoa_circuit_from_terms"
+      ],
+      "keywords": [
+        "quantum_simulation",
+        "neural_network",
+        "optimization"
+      ],
+      "complexity_score": 23
+    },
+    "qaoa_circuit_maxcut.py": {
+      "file_name": "qaoa_circuit_maxcut.py",
+      "classes": [],
+      "functions": [
+        "get_qaoa_circuit",
+        "get_parameterized_qaoa_circuit"
+      ],
+      "keywords": [
+        "visualization",
+        "quantum_simulation",
+        "neural_network"
+      ],
+      "complexity_score": 2
+    },
+    "utils.py": {
+      "file_name": "utils.py",
+      "classes": [
+        "ComplexArray"
+      ],
+      "functions": [
+        "combine_complex",
+        "norm_squared",
+        "get_complex_array"
+      ],
+      "keywords": [
+        "data_processing"
+      ],
+      "complexity_score": 8
+    },
+    "energy_utils.py": {
+      "file_name": "energy_utils.py",
+      "classes": [
+        "JITObjectiveWrapper"
+      ],
+      "functions": [
+        "_generate_bit_strings_jit",
+        "_precompute_energies_jit_core",
+        "_precompute_energies_parallel_jit",
+        "_obj_from_statevector_jit",
+        "_brute_force_optimization_jit",
+        "_objective_from_counts_jit",
+        "_yield_bitstring_jit",
+        "generate_bit_strings",
+        "yield_all_bitstrings",
+        "precompute_energies",
+        "precompute_energies_parallel",
+        "obj_from_statevector",
+        "objective_from_counts",
+        "brute_force_optimization",
+        "process_chunk"
+      ],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "optimization"
+      ],
+      "complexity_score": 55
+    },
+    "labs.py": {
+      "file_name": "labs.py",
+      "classes": [],
+      "functions": [
+        "get_terms_offset",
+        "get_term_indices",
+        "get_terms",
+        "get_depth_optimized_terms",
+        "get_gate_optimized_terms_naive",
+        "get_gate_optimized_terms_greedy"
+      ],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "neural_network",
+        "benchmarking",
+        "optimization"
+      ],
+      "complexity_score": 64
+    },
+    "maxcut.py": {
+      "file_name": "maxcut.py",
+      "classes": [],
+      "functions": [
+        "get_maxcut_terms",
+        "get_adjacency_matrix"
+      ],
+      "keywords": [
+        "visualization",
+        "optimization",
+        "neural_network"
+      ],
+      "complexity_score": 5
+    },
+    "energy_qaoa_objective.py": {
+      "file_name": "energy_qaoa_objective.py",
+      "classes": [],
+      "functions": [
+        "_dot_product_parallel_chunks",
+        "_dot_product_parallel_reduce",
+        "_select_optimal_dot_strategy",
+        "_compute_dot_product_optimized",
+        "_compute_overlap_parallel",
+        "_validate_inputs_fast",
+        "_compute_expectation_min",
+        "_compute_expectation_max",
+        "_compute_overlap_objective",
+        "compute_objective_from_probabilities",
+        "compute_expectation_batch",
+        "compute_expectation_batch_parallel"
+      ],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "neural_network",
+        "optimization"
+      ],
+      "complexity_score": 41
+    },
+    "qaoa_objective.py": {
+      "file_name": "qaoa_objective.py",
+      "classes": [],
+      "functions": [
+        "_get_qiskit_objective",
+        "get_qaoa_objective",
+        "get_qaoa_labs_overlap",
+        "get_qaoa_labs_overlap_fourier",
+        "f",
+        "g",
+        "fq",
+        "g"
+      ],
+      "keywords": [
+        "quantum_simulation",
+        "neural_network",
+        "benchmarking",
+        "optimization"
+      ],
+      "complexity_score": 26
+    },
+    "energy_maxcut.py": {
+      "file_name": "energy_maxcut.py",
+      "classes": [],
+      "functions": [
+        "_ultra_fast_contribution",
+        "_fused_multiply_add",
+        "_vectorized_dot_product",
+        "_maxcut_parallel_tiled",
+        "_maxcut_sparse_csr_parallel",
+        "_convert_to_csr",
+        "_compute_advanced_sparsity_metrics",
+        "_maxcut_symmetric_triangular_vectorized",
+        "_is_symmetric_fast",
+        "_optimal_tile_size",
+        "_maxcut_batch_ultra_optimized",
+        "_maxcut_gradient_vectorized",
+        "maxcut_obj",
+        "maxcut_obj_batch",
+        "maxcut_obj_gradient_approx",
+        "maxcut_obj_binary_optimized",
+        "maxcut_obj_incremental_update"
+      ],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "neural_network",
+        "benchmarking",
+        "optimization"
+      ],
+      "complexity_score": 66
+    },
+    "energy_labs.py": {
+      "file_name": "energy_labs.py",
+      "classes": [],
+      "functions": [
+        "fast_fma_intrinsic",
+        "_fma",
+        "_vectorized_autocorr_core",
+        "_algorithm_selector",
+        "_compute_energy_basic",
+        "_compute_energy_parallel",
+        "_compute_energy_core",
+        "_batch_energy_computation",
+        "_compute_autocorr_spectrum",
+        "_batch_autocorr_spectra",
+        "energy_vals",
+        "energy_vals_from_bitstring",
+        "merit_factor",
+        "negative_merit_factor_from_bitstring",
+        "energy_vals_batch",
+        "merit_factor_batch",
+        "get_autocorrelation_spectrum",
+        "get_batch_autocorrelation_spectra",
+        "energy_vals_general",
+        "energy_vals_from_bitstring_general",
+        "get_energy_term_indices",
+        "slow_merit_factor",
+        "fast_fma_impl"
+      ],
+      "keywords": [
+        "data_processing",
+        "optimization",
+        "neural_network"
+      ],
+      "complexity_score": 67
+    },
+    "qaoa_objective_labs.py": {
+      "file_name": "qaoa_objective_labs.py",
+      "classes": [
+        "UltraOptimizedLABSHandler"
+      ],
+      "functions": [
+        "_fast_bit_count",
+        "_fast_merit_factor_single",
+        "_fast_precompute_merit_factors_parallel",
+        "_fast_precompute_merit_factors_sequential",
+        "_energy_from_bitstring_jit",
+        "_find_optimal_bitstrings_parallel",
+        "_compute_random_guess_merit_factor_jit",
+        "get_precomputed_labs_merit_factors",
+        "get_precomputed_optimal_bitstrings",
+        "get_random_guess_merit_factor",
+        "prefetch_labs_data",
+        "get_qaoa_labs_objective"
+      ],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "neural_network",
+        "benchmarking",
+        "optimization"
+      ],
+      "complexity_score": 62
+    },
+    "compile_and_run.py": {
+      "file_name": "compile_and_run.py",
+      "classes": [],
+      "functions": [],
+      "keywords": [
+        "data_processing",
+        "visualization",
+        "neural_network",
+        "benchmarking",
+        "optimization"
+      ],
+      "complexity_score": 1
+    },
+    "interconnect.py": {
+      "file_name": "interconnect.py",
+      "classes": [
+        "CacheManager",
+        "Interconnect"
+      ],
+      "functions": [
+        "route_request",
+        "register_component",
+        "on_event",
+        "broadcast",
+        "get_component_info",
+        "clear_cache",
+        "get_stats"
+      ],
+      "keywords": [
+        "data_processing",
+        "optimization",
+        "neural_network",
+        "visualization"
+      ],
+      "complexity_score": 56
+    },
+    "interconnect_diagnostic.py": {
+      "file_name": "interconnect_diagnostic.py",
+      "classes": [
+        "InterconnectDiagnostic"
+      ],
+      "functions": [
+        "main"
+      ],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "visualization",
+        "neural_network",
+        "benchmarking",
+        "optimization"
+      ],
+      "complexity_score": 90
+    },
+    "setup.py": {
+      "file_name": "setup.py",
+      "classes": [],
+      "functions": [],
+      "keywords": [],
+      "complexity_score": 0
+    },
+    "generate_lp.py": {
+      "file_name": "generate_lp.py",
+      "classes": [],
+      "functions": [
+        "generate_lp",
+        "c_k",
+        "generate_model_cplex_non_compatible",
+        "generate_model_cplex_compatible"
+      ],
+      "keywords": [
+        "optimization",
+        "neural_network"
+      ],
+      "complexity_score": 12
+    },
+    "qaoa_simulator_base.py": {
+      "file_name": "qaoa_simulator_base.py",
+      "classes": [
+        "QAOAFastSimulatorBase"
+      ],
+      "functions": [],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "neural_network",
+        "optimization"
+      ],
+      "complexity_score": 14
+    },
+    "lazy_import.py": {
+      "file_name": "lazy_import.py",
+      "classes": [
+        "LasyModule"
+      ],
+      "functions": [],
+      "keywords": [],
+      "complexity_score": 7
+    },
+    "qaoa_fur.py": {
+      "file_name": "qaoa_fur.py",
+      "classes": [],
+      "functions": [
+        "apply_qaoa_furx",
+        "apply_qaoa_furxy_ring",
+        "apply_qaoa_furxy_complete"
+      ],
+      "keywords": [
+        "quantum_simulation",
+        "neural_network",
+        "optimization"
+      ],
+      "complexity_score": 8
+    },
+    "compute_costs.py": {
+      "file_name": "compute_costs.py",
+      "classes": [],
+      "functions": [
+        "zero_init_kernel",
+        "zero_init",
+        "compute_costs_kernel",
+        "compute_costs"
+      ],
+      "keywords": [
+        "quantum_simulation",
+        "optimization"
+      ],
+      "complexity_score": 8
+    },
+    "fur.py": {
+      "file_name": "fur.py",
+      "classes": [],
+      "functions": [
+        "get_furx_kernel",
+        "furx",
+        "furx_all",
+        "furxy_kernel",
+        "furxy",
+        "furxy_ring",
+        "furxy_complete"
+      ],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "neural_network",
+        "optimization"
+      ],
+      "complexity_score": 20
+    },
+    "qaoa_simulator.py": {
+      "file_name": "qaoa_simulator.py",
+      "classes": [
+        "QAOAFastSimulatorCBase",
+        "QAOAFURXSimulatorC",
+        "QAOAFURXYRingSimulatorC",
+        "QAOAFURXYCompleteSimulatorC"
+      ],
+      "functions": [],
+      "keywords": [
+        "quantum_simulation",
+        "optimization"
+      ],
+      "complexity_score": 26
+    },
+    "gpu_numba.py": {
+      "file_name": "gpu_numba.py",
+      "classes": [],
+      "functions": [
+        "zero_init_kernel",
+        "zero_init",
+        "compute_costs_kernel",
+        "compute_costs"
+      ],
+      "keywords": [
+        "quantum_simulation",
+        "optimization"
+      ],
+      "complexity_score": 8
+    },
+    "numpy_vectorized.py": {
+      "file_name": "numpy_vectorized.py",
+      "classes": [],
+      "functions": [
+        "bit_count",
+        "precompute_vectorized_cpu_parallel"
+      ],
+      "keywords": [
+        "quantum_simulation"
+      ],
+      "complexity_score": 3
+    },
+    "gates.py": {
+      "file_name": "gates.py",
+      "classes": [],
+      "functions": [
+        "furx",
+        "furxy"
+      ],
+      "keywords": [
+        "quantum_simulation"
+      ],
+      "complexity_score": 2
+    },
+    "energy_qaoa_simulator.py": {
+      "file_name": "energy_qaoa_simulator.py",
+      "classes": [],
+      "functions": [
+        "_compute_expectation_core",
+        "_negate_costs_vectorized",
+        "_find_min_indices_vectorized",
+        "_sum_probabilities_at_indices",
+        "_compute_overlap_with_indices",
+        "_compute_overlap_without_indices",
+        "get_expectation",
+        "get_overlap",
+        "add_scalar_vectorized",
+        "multiply_arrays_vectorized",
+        "sum_vectorized",
+        "abs_vectorized",
+        "count_equal_values",
+        "gather_vectorized",
+        "scatter_add_vectorized",
+        "ensure_optimal_layout",
+        "prepare_arrays_for_computation",
+        "popcount_single",
+        "popcount_vectorized"
+      ],
+      "keywords": [
+        "quantum_simulation",
+        "benchmarking",
+        "optimization"
+      ],
+      "complexity_score": 45
+    },
+    "libpath.py": {
+      "file_name": "libpath.py",
+      "classes": [],
+      "functions": [
+        "is_available"
+      ],
+      "keywords": [],
+      "complexity_score": 1
+    },
+    "wrapper.py": {
+      "file_name": "wrapper.py",
+      "classes": [],
+      "functions": [
+        "check_arrays",
+        "check_num_qubits",
+        "furx",
+        "apply_qaoa_furx",
+        "furxy",
+        "apply_qaoa_furxy_ring",
+        "apply_qaoa_furxy_complete"
+      ],
+      "keywords": [
+        "quantum_simulation",
+        "neural_network"
+      ],
+      "complexity_score": 8
+    },
+    "lib.py": {
+      "file_name": "lib.py",
+      "classes": [],
+      "functions": [],
+      "keywords": [],
+      "complexity_score": 1
+    },
+    "diagonal.py": {
+      "file_name": "diagonal.py",
+      "classes": [],
+      "functions": [
+        "apply_diagonal_kernel",
+        "apply_diagonal"
+      ],
+      "keywords": [],
+      "complexity_score": 3
+    }
+  },
+  "new_files_analysis": {
+    "iterative_free_qaoa.py": {
+      "file_name": "iterative_free_qaoa.py",
+      "classes": [
+        "StateManager",
+        "IterativeFreeQAOA"
+      ],
+      "functions": [],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "visualization",
+        "neural_network",
+        "benchmarking",
+        "optimization"
+      ],
+      "complexity_score": 35
+    },
+    "scaling_analyzer.py": {
+      "file_name": "scaling_analyzer.py",
+      "classes": [
+        "ScalingAnalyzer"
+      ],
+      "functions": [],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "visualization",
+        "neural_network",
+        "benchmarking"
+      ],
+      "complexity_score": 33
+    },
+    "config.py": {
+      "file_name": "config.py",
+      "classes": [
+        "SpectralConfig"
+      ],
+      "functions": [],
+      "keywords": [
+        "quantum_simulation"
+      ],
+      "complexity_score": 6
+    },
+    "spectral_core.py": {
+      "file_name": "spectral_core.py",
+      "classes": [
+        "SpectralCore"
+      ],
+      "functions": [],
+      "keywords": [
+        "data_processing",
+        "neural_network",
+        "visualization"
+      ],
+      "complexity_score": 18
+    },
+    "cache_manager.py": {
+      "file_name": "cache_manager.py",
+      "classes": [
+        "CacheManager"
+      ],
+      "functions": [],
+      "keywords": [
+        "visualization",
+        "neural_network"
+      ],
+      "complexity_score": 15
+    },
+    "adaptive_scaling.py": {
+      "file_name": "adaptive_scaling.py",
+      "classes": [
+        "HybridAdaptiveScaling"
+      ],
+      "functions": [],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "neural_network",
+        "visualization"
+      ],
+      "complexity_score": 13
+    },
+    "graph_spectral_fft.py": {
+      "file_name": "graph_spectral_fft.py",
+      "classes": [
+        "GraphSpectralFFT",
+        "AdaptiveSpectralFFT"
+      ],
+      "functions": [],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "neural_network",
+        "visualization"
+      ],
+      "complexity_score": 28
+    },
+    "complex_mvn.py": {
+      "file_name": "complex_mvn.py",
+      "classes": [
+        "MVN"
+      ],
+      "functions": [],
+      "keywords": [
+        "data_processing",
+        "neural_network"
+      ],
+      "complexity_score": 12
+    },
+    "mlmvn_network.py": {
+      "file_name": "mlmvn_network.py",
+      "classes": [
+        "MLMVN"
+      ],
+      "functions": [],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "neural_network",
+        "optimization"
+      ],
+      "complexity_score": 43
+    },
+    "adamw_optimizer.py": {
+      "file_name": "adamw_optimizer.py",
+      "classes": [
+        "AdamWOptimizer"
+      ],
+      "functions": [],
+      "keywords": [
+        "optimization",
+        "neural_network"
+      ],
+      "complexity_score": 10
+    },
+    "rqaoa_agent_main.py": {
+      "file_name": "rqaoa_agent_main.py",
+      "classes": [
+        "RQAOA_agent"
+      ],
+      "functions": [
+        "create_default_graph",
+        "parse_graph_name",
+        "_random_weights"
+      ],
+      "keywords": [
+        "data_processing",
+        "quantum_simulation",
+        "visualization",
+        "neural_network",
+        "benchmarking",
+        "optimization"
+      ],
+      "complexity_score": 70
+    },
+    "computational_core.py": {
+      "file_name": "computational_core.py",
+      "classes": [
+        "ComputationalCore"
+      ],
+      "functions": [],
+      "keywords": [
+        "optimization"
+      ],
+      "complexity_score": 60
+    },
+    "rqaoa_algorithms.py": {
+      "file_name": "rqaoa_algorithms.py",
+      "classes": [
+        "RQAOAAlgorithms"
+      ],
+      "functions": [],
+      "keywords": [
+        "visualization",
+        "optimization"
+      ],
+      "complexity_score": 9
+    },
+    "graph.py": {
+      "file_name": "graph.py",
+      "classes": [
+        "Graph"
+      ],
+      "functions": [],
+      "keywords": [
+        "visualization",
+        "quantum_simulation",
+        "neural_network"
+      ],
+      "complexity_score": 20
+    },
+    "utils.py": {
+      "file_name": "utils.py",
+      "classes": [],
+      "functions": [
+        "random_weights",
+        "safe_open_w"
+      ],
+      "keywords": [
+        "visualization",
+        "quantum_simulation",
+        "neural_network"
+      ],
+      "complexity_score": 8
+    }
+  },
+  "integration_recommendations": {
+    "iterative_free_qaoa.py": [
+      {
+        "framework_file": "qaoa_objective_labs.py",
+        "score": 0.5149122807017544
+      },
+      {
+        "framework_file": "parameter_utils.py",
+        "score": 0.5047619047619047
+      },
+      {
+        "framework_file": "interconnect.py",
+        "score": 0.4984848484848484
+      },
+      {
+        "framework_file": "interconnect_diagnostic.py",
+        "score": 0.48750000000000004
+      },
+      {
+        "framework_file": "qaoa_simulator_base.py",
+        "score": 0.4766666666666667
+      }
+    ],
+    "scaling_analyzer.py": [
+      {
+        "framework_file": "qaoa_objective_labs.py",
+        "score": 0.45196078431372544
+      },
+      {
+        "framework_file": "interconnect.py",
+        "score": 0.44999999999999996
+      },
+      {
+        "framework_file": "parameter_utils.py",
+        "score": 0.44166666666666665
+      },
+      {
+        "framework_file": "interconnect_diagnostic.py",
+        "score": 0.42619047619047623
+      },
+      {
+        "framework_file": "qaoa_simulator_base.py",
+        "score": 0.42500000000000004
+      }
+    ],
+    "config.py": [
+      {
+        "framework_file": "numpy_vectorized.py",
+        "score": 0.55
+      },
+      {
+        "framework_file": "gates.py",
+        "score": 0.47500000000000003
+      },
+      {
+        "framework_file": "dicke_state_utils.py",
+        "score": 0.45
+      },
+      {
+        "framework_file": "wrapper.py",
+        "score": 0.4
+      },
+      {
+        "framework_file": "qaoa_simulator.py",
+        "score": 0.39285714285714285
+      }
+    ],
+    "spectral_core.py": [
+      {
+        "framework_file": "interconnect.py",
+        "score": 0.55
+      },
+      {
+        "framework_file": "parameter_utils.py",
+        "score": 0.41500000000000004
+      },
+      {
+        "framework_file": "qaoa_simulator_base.py",
+        "score": 0.385
+      },
+      {
+        "framework_file": "generator.py",
+        "score": 0.35
+      },
+      {
+        "framework_file": "utils.py",
+        "score": 0.32619047619047614
+      }
+    ],
+    "cache_manager.py": [
+      {
+        "framework_file": "interconnect.py",
+        "score": 0.44999999999999996
+      },
+      {
+        "framework_file": "generator.py",
+        "score": 0.41666666666666663
+      },
+      {
+        "framework_file": "maxcut.py",
+        "score": 0.36666666666666664
+      },
+      {
+        "framework_file": "qaoa_circuit_maxcut.py",
+        "score": 0.35238095238095235
+      },
+      {
+        "framework_file": "parameter_utils.py",
+        "score": 0.335
+      }
+    ],
+    "adaptive_scaling.py": [
+      {
+        "framework_file": "parameter_utils.py",
+        "score": 0.4930769230769232
+      },
+      {
+        "framework_file": "interconnect.py",
+        "score": 0.48
+      },
+      {
+        "framework_file": "qaoa_simulator_base.py",
+        "score": 0.45666666666666667
+      },
+      {
+        "framework_file": "generator.py",
+        "score": 0.4285714285714286
+      },
+      {
+        "framework_file": "qaoa_objective_labs.py",
+        "score": 0.3833333333333333
+      }
+    ],
+    "graph_spectral_fft.py": [
+      {
+        "framework_file": "parameter_utils.py",
+        "score": 0.49142857142857144
+      },
+      {
+        "framework_file": "interconnect.py",
+        "score": 0.4718181818181818
+      },
+      {
+        "framework_file": "qaoa_simulator_base.py",
+        "score": 0.44999999999999996
+      },
+      {
+        "framework_file": "generator.py",
+        "score": 0.41250000000000003
+      },
+      {
+        "framework_file": "qaoa_objective_labs.py",
+        "score": 0.381578947368421
+      }
+    ],
+    "complex_mvn.py": [
+      {
+        "framework_file": "qaoa_simulator_base.py",
+        "score": 0.44999999999999996
+      },
+      {
+        "framework_file": "interconnect.py",
+        "score": 0.42500000000000004
+      },
+      {
+        "framework_file": "utils.py",
+        "score": 0.41000000000000003
+      },
+      {
+        "framework_file": "yahoo.py",
+        "score": 0.4
+      },
+      {
+        "framework_file": "qaoa_objective_labs.py",
+        "score": 0.35000000000000003
+      }
+    ],
+    "mlmvn_network.py": [
+      {
+        "framework_file": "qaoa_simulator_base.py",
+        "score": 0.6357142857142857
+      },
+      {
+        "framework_file": "qaoa_objective_labs.py",
+        "score": 0.5075000000000001
+      },
+      {
+        "framework_file": "parameter_utils.py",
+        "score": 0.4972727272727273
+      },
+      {
+        "framework_file": "energy_utils.py",
+        "score": 0.4928571428571429
+      },
+      {
+        "framework_file": "interconnect_diagnostic.py",
+        "score": 0.46282051282051284
+      }
+    ],
+    "adamw_optimizer.py": [
+      {
+        "framework_file": "sk.py",
+        "score": 0.47500000000000003
+      },
+      {
+        "framework_file": "qaoa_simulator_base.py",
+        "score": 0.44999999999999996
+      },
+      {
+        "framework_file": "interconnect.py",
+        "score": 0.42500000000000004
+      },
+      {
+        "framework_file": "qaoa_circuit.py",
+        "score": 0.41666666666666663
+      },
+      {
+        "framework_file": "generate_lp.py",
+        "score": 0.4
+      }
+    ],
+    "rqaoa_agent_main.py": [
+      {
+        "framework_file": "interconnect_diagnostic.py",
+        "score": 0.65
+      },
+      {
+        "framework_file": "interconnect.py",
+        "score": 0.5966666666666667
+      },
+      {
+        "framework_file": "parameter_utils.py",
+        "score": 0.5476190476190477
+      },
+      {
+        "framework_file": "qaoa_objective_labs.py",
+        "score": 0.5283333333333333
+      },
+      {
+        "framework_file": "qaoa_simulator_base.py",
+        "score": 0.39848484848484844
+      }
+    ],
+    "computational_core.py": [
+      {
+        "framework_file": "qaoa_simulator.py",
+        "score": 0.3875
+      },
+      {
+        "framework_file": "energy_utils.py",
+        "score": 0.32619047619047614
+      },
+      {
+        "framework_file": "qaoa_simulator_base.py",
+        "score": 0.2875
+      },
+      {
+        "framework_file": "interconnect.py",
+        "score": 0.28
+      },
+      {
+        "framework_file": "parameter_utils.py",
+        "score": 0.25727272727272726
+      }
+    ],
+    "rqaoa_algorithms.py": [
+      {
+        "framework_file": "interconnect.py",
+        "score": 0.3833333333333333
+      },
+      {
+        "framework_file": "parameter_utils.py",
+        "score": 0.34
+      },
+      {
+        "framework_file": "maxcut.py",
+        "score": 0.32666666666666666
+      },
+      {
+        "framework_file": "qaoa_simulator.py",
+        "score": 0.32619047619047614
+      },
+      {
+        "framework_file": "energy_utils.py",
+        "score": 0.3
+      }
+    ],
+    "graph.py": [
+      {
+        "framework_file": "generator.py",
+        "score": 0.52
+      },
+      {
+        "framework_file": "qaoa_circuit_maxcut.py",
+        "score": 0.45
+      },
+      {
+        "framework_file": "parameter_utils.py",
+        "score": 0.42000000000000004
+      },
+      {
+        "framework_file": "interconnect.py",
+        "score": 0.385
+      },
+      {
+        "framework_file": "qaoa_simulator_base.py",
+        "score": 0.35285714285714287
+      }
+    ],
+    "utils.py": [
+      {
+        "framework_file": "generator.py",
+        "score": 0.55
+      },
+      {
+        "framework_file": "qaoa_circuit_maxcut.py",
+        "score": 0.4857142857142857
+      },
+      {
+        "framework_file": "wrapper.py",
+        "score": 0.38666666666666666
+      },
+      {
+        "framework_file": "qaoa_circuit_sk.py",
+        "score": 0.35238095238095235
+      },
+      {
+        "framework_file": "interconnect.py",
+        "score": 0.31000000000000005
+      }
+    ]
+  }
+}

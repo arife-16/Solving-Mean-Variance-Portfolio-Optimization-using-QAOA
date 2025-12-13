@@ -1,0 +1,3 @@
+mode,N,K,p_or_layers,mixer,warm_start,formulation,alpha,lam_tc,best_energy,optimal_energy,energy_gap,cvar,gate_single,gate_two,layers,duration_sec,solver_used,shots,noise_p,pairs
+adapt,6,3,1,xy,0,mvo,0.2,0.1,-0.0031017835740008784,-0.004728751244237241,0.001626967670236363,-0.0019090816171910795,0,1,1,0.005037069320678711,,256,0.02,all
+adapt,6,3,2,xy,0,mvo,0.2,0.1,-0.0031050711176790822,-0.004728751244237241,0.001623680126558159,-0.0019088491168826637,0,2,2,0.01314091682434082,,256,0.02,all

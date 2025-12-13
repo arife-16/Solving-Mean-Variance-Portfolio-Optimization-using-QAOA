@@ -1,0 +1,2 @@
+mode,N,K,p_or_layers,mixer,warm_start,formulation,alpha,lam_tc,best_energy,optimal_energy,energy_gap,cvar,gate_single,gate_two,layers,duration_sec
+standard,6,3,1,xy,0,mvo,0.2,0.1,-0.003101806755332501,-0.004728751244237241,0.0016269444889047404,-0.0020779062049322327,0,6,,0.003986835479736328

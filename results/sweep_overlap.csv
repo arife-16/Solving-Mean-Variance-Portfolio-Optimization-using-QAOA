@@ -1,0 +1,2 @@
+mode,N,K,p_or_layers,mixer,warm_start,formulation,alpha,lam_tc,best_energy,optimal_energy,energy_gap,cvar,overlap,gate_single,gate_two,layers,duration_sec,solver_used,shots,noise_p,pairs
+standard,6,3,1,xy,0,mvo,0.2,0.1,-0.0032143477663186303,-0.004728751244237241,0.001514403477918611,-0.002028073211864246,0.05859375,0,6,,0.004889249801635742,bruteforce,256,0.02,

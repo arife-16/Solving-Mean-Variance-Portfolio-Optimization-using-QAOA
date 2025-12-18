@@ -31,6 +31,9 @@ class PortfolioPipeline:
             energies = energies_full(problem["means"], problem["cov"], q, N)
         elif formulation == "mad":
             energies = energies_full_mad(problem["returns"], q, N)
+        elif formulation == "cvar":  
+            from .formulations_extended import energies_full_cvar
+            energies = energies_full_cvar(problem["returns"], q, N, alpha=0.05)
         else:
             energies = energies_full_mvo_tc(problem["means"], problem["cov"], q, N, problem["tc"], lam_tc)
         psi0 = warm_start_state(problem["means"], problem["cov"], K) if warm_start else dicke_state(N, K)

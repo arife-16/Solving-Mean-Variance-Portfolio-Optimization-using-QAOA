@@ -2,7 +2,7 @@ import time
 import math
 import random
 import numpy as np
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from .data import generate_synthetic_returns, compute_mu_sigma, load_prices_csv, returns_from_prices, load_transaction_costs_csv
 from .formulations import energies_full, energies_full_mad, energies_full_mvo_tc
 from .classical import brute_force_k_hot, brute_force_from_energies
@@ -18,7 +18,7 @@ class PortfolioPipeline:
         random.seed(seed)
         np.random.seed(seed)
 
-    def _get_problem(self, N: int, K: int, q: float, prices_csv: str | None = None, tc_csv: str | None = None) -> Dict[str, Any]:
+    def _get_problem(self, N: int, K: int, q: float, prices_csv: Optional[str] = None, tc_csv: Optional[str] = None) -> Dict[str, Any]:
         if prices_csv:
             prices = load_prices_csv(prices_csv)
             rets = returns_from_prices(prices)
@@ -31,7 +31,7 @@ class PortfolioPipeline:
             tc = generate_transaction_costs(N, self.seed)
         return {"N": N, "K": K, "q": q, "means": mu, "cov": sigma, "returns": rets, "tc": tc}
 
-    def run_standard(self, N: int, K: int, q: float, p: int, mixer: str = "xy", T: int = 1, warm_start: bool = False, alpha: float = 0.2, samples: int = 32, refine_iters: int = 20, refine_step: float = 0.05, formulation: str = "mvo", lam_tc: float = 0.1, shots: int = 0, noise_p: float = 0.0, solver: str = "bruteforce", objective: str = "expectation", noise_model: str = "depolarizing", prices_csv: str | None = None, tc_csv: str | None = None) -> Dict[str, Any]:
+    def run_standard(self, N: int, K: int, q: float, p: int, mixer: str = "xy", T: int = 1, warm_start: bool = False, alpha: float = 0.2, samples: int = 32, refine_iters: int = 20, refine_step: float = 0.05, formulation: str = "mvo", lam_tc: float = 0.1, shots: int = 0, noise_p: float = 0.0, solver: str = "bruteforce", objective: str = "expectation", noise_model: str = "depolarizing", prices_csv: Optional[str] = None, tc_csv: Optional[str] = None) -> Dict[str, Any]:
         start = time.time()
         problem = self._get_problem(N=N, K=K, q=q, prices_csv=prices_csv, tc_csv=tc_csv)
         if formulation == "mvo":
@@ -87,7 +87,7 @@ class PortfolioPipeline:
         end = time.time()
         return {"best_energy": float(best_y), "optimal_energy": float(emin), "energy_gap": float(best_y - emin), "cvar": float(cvar), "overlap": float(overlap), "params": best_x.tolist(), "gate_counts": gates, "duration_sec": float(end - start), "solver_used": solver, "shots": int(shots), "noise_p": float(noise_p), "noise_model": noise_model, "objective": objective}
 
-    def run_adapt(self, N: int, K: int, q: float, max_layers: int, mixer: str = "xy", T: int = 1, warm_start: bool = False, alpha: float = 0.2, formulation: str = "mvo", lam_tc: float = 0.1, pool: str = "ring", shots: int = 0, noise_p: float = 0.0, pairs_mode: str = "ring", objective: str = "expectation", noise_model: str = "depolarizing", prices_csv: str | None = None, tc_csv: str | None = None) -> Dict[str, Any]:
+    def run_adapt(self, N: int, K: int, q: float, max_layers: int, mixer: str = "xy", T: int = 1, warm_start: bool = False, alpha: float = 0.2, formulation: str = "mvo", lam_tc: float = 0.1, pool: str = "ring", shots: int = 0, noise_p: float = 0.0, pairs_mode: str = "ring", objective: str = "expectation", noise_model: str = "depolarizing", prices_csv: Optional[str] = None, tc_csv: Optional[str] = None) -> Dict[str, Any]:
         start = time.time()
         problem = self._get_problem(N=N, K=K, q=q, prices_csv=prices_csv, tc_csv=tc_csv)
         if formulation == "mvo":

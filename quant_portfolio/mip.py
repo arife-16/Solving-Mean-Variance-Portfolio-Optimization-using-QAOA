@@ -1,5 +1,26 @@
 import numpy as np
 
+def relax_mvo_qp(mu, sigma, q, N, K):
+    try:
+        import cvxpy as cp
+    except Exception:
+        return None
+    x = cp.Variable(N)
+    obj = q * cp.quad_form(x, sigma) - mu @ x
+    cons = [cp.sum(x) == K, x >= 0, x <= 1]
+    prob = cp.Problem(cp.Minimize(obj), cons)
+    solvers = ["OSQP", "SCS", "GUROBI", "MOSEK", "CPLEX"]
+    res = None
+    for s in solvers:
+        try:
+            res = prob.solve(solver=getattr(cp, s))
+            break
+        except Exception:
+            continue
+    if res is None or x.value is None:
+        return None
+    return np.array(x.value).ravel()
+
 def solve_mvo_milp(mu, sigma, q, N, K, tc=None, lam_tc=0.0):
     try:
         import pulp

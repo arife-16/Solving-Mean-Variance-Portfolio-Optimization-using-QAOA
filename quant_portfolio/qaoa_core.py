@@ -15,8 +15,16 @@ def dicke_state(N: int, K: int):
 
 def warm_start_state(mu, sigma, K):
     N = mu.shape[0]
-    p = 1 / (1 + np.exp(-mu))
-    w = np.array([np.log(p[i] / (1 - p[i])) for i in range(N)])
+    try:
+        from .mip import relax_mvo_qp
+        x = relax_mvo_qp(mu, sigma, 1.0, N, K)
+    except Exception:
+        x = None
+    if x is None:
+        p = 1 / (1 + np.exp(-mu))
+        w = np.array([np.log(p[i] / (1 - p[i])) for i in range(N)])
+    else:
+        w = x
     dim = 1 << N
     amp = np.zeros(dim, dtype=float)
     for z in range(dim):
@@ -78,6 +86,23 @@ def apply_xy_ring(state, beta, N, T):
             psi = apply_two_qubit(psi, U, i, i + 1, N)
         for i in range(1, N - 1, 2):
             psi = apply_two_qubit(psi, U, i, i + 1, N)
+        psi = apply_two_qubit(psi, U, N - 1, 0, N)
+    return psi
+
+def apply_xy_qampa(state, beta, N, T, K):
+    psi = state
+    s = K / max(N, 1)
+    for _ in range(T):
+        for i in range(0, N - 1, 2):
+            w = beta * (1.0 + 0.5 * np.cos(2.0 * np.pi * i / max(N, 1))) * s
+            U = xy_unitary(4 * w / 1)
+            psi = apply_two_qubit(psi, U, i, i + 1, N)
+        for i in range(1, N - 1, 2):
+            w = beta * (1.0 + 0.5 * np.cos(2.0 * np.pi * i / max(N, 1))) * s
+            U = xy_unitary(4 * w / 1)
+            psi = apply_two_qubit(psi, U, i, i + 1, N)
+        w = beta * (1.0 + 0.5 * np.cos(2.0 * np.pi * (N - 1) / max(N, 1))) * s
+        U = xy_unitary(4 * w / 1)
         psi = apply_two_qubit(psi, U, N - 1, 0, N)
     return psi
 
@@ -177,13 +202,22 @@ def qaoa_expectation_shots(psi0, energies, N, K, theta, mixer="xy", T=1, shots=1
     for t in range(len(g)):
         phase = np.exp(-1j * g[t] * energies)
         psi = psi * phase
-        psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
+        if mixer == "qampa":
+            psi = apply_xy_qampa(psi, b[t], N, T, K)
+        else:
+            psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
     probs = np.real(psi.conj() * psi)
-    probs = apply_noise(probs, noise_model, noise_p, N)
-    probs = probs / probs.sum()
-    idx = np.arange(probs.shape[0])
-    counts = np.random.multinomial(shots, probs)
-    est = float((counts * energies).sum() / max(shots, 1))
+    probs = probs / max(probs.sum(), 1e-12)
+    dim = probs.shape[0]
+    est = 0.0
+    for _ in range(max(shots, 1)):
+        z = np.random.choice(np.arange(dim), p=probs)
+        if noise_model == "bitflip" and noise_p > 0.0:
+            for i in range(N):
+                if np.random.rand() < noise_p:
+                    z ^= (1 << i)
+        est += energies[z]
+    est = est / max(shots, 1)
     return est
 
 def qaoa_cvar_shots(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, shots=1024, noise_p=0.0, noise_model="depolarizing"):
@@ -192,23 +226,26 @@ def qaoa_cvar_shots(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, shots=1
     for t in range(len(g)):
         phase = np.exp(-1j * g[t] * energies)
         psi = psi * phase
-        psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
+        if mixer == "qampa":
+            psi = apply_xy_qampa(psi, b[t], N, T, K)
+        else:
+            psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
     probs = np.real(psi.conj() * psi)
-    probs = apply_noise(probs, noise_model, noise_p, N)
-    probs = probs / probs.sum()
-    idx = np.arange(probs.shape[0])
-    counts = np.random.multinomial(shots, probs)
-    order = np.argsort(energies)[::-1]
-    cum = np.cumsum(counts[order])
-    thr = int(alpha * shots)
+    probs = probs / max(probs.sum(), 1e-12)
+    dim = probs.shape[0]
+    samples = []
+    for _ in range(max(shots, 1)):
+        z = np.random.choice(np.arange(dim), p=probs)
+        if noise_model == "bitflip" and noise_p > 0.0:
+            for i in range(N):
+                if np.random.rand() < noise_p:
+                    z ^= (1 << i)
+        samples.append(energies[z])
+    order = np.argsort(samples)[::-1]
+    thr = int(alpha * max(shots, 1))
     s = 0.0
-    w = 0
-    for k in range(len(order)):
-        if w >= thr:
-            break
-        take = min(thr - w, counts[order[k]])
-        s += energies[order[k]] * take
-        w += take
+    for k in range(min(thr, len(order))):
+        s += samples[order[k]]
     return float(s / max(thr, 1))
 
 def evolve_state(psi0, energies, N, theta, mixer="xy", T=1):
@@ -251,7 +288,10 @@ def qaoa_expectation(psi0, energies, N, K, theta, mixer="xy", T=1, noise_model="
     for t in range(len(g)):
         phase = np.exp(-1j * g[t] * energies)
         psi = psi * phase
-        psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
+        if mixer == "qampa":
+            psi = apply_xy_qampa(psi, b[t], N, T, K)
+        else:
+            psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
     probs = np.real(psi.conj() * psi)
     probs = apply_noise(probs, noise_model, noise_p, N)
     return float((probs * energies).sum())
@@ -262,7 +302,10 @@ def qaoa_cvar(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, noise_model="
     for t in range(len(g)):
         phase = np.exp(-1j * g[t] * energies)
         psi = psi * phase
-        psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
+        if mixer == "qampa":
+            psi = apply_xy_qampa(psi, b[t], N, T, K)
+        else:
+            psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
     probs = np.real(psi.conj() * psi)
     probs = apply_noise(probs, noise_model, noise_p, N)
     idx = np.argsort(energies)[::-1]

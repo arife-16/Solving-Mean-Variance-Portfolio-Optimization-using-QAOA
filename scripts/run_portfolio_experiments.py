@@ -25,6 +25,9 @@ def main():
     parser.add_argument("--noise_model", type=str, choices=["depolarizing", "bitflip", "phaseflip", "none"], default="depolarizing")
     parser.add_argument("--prices_csv", type=str, default="")
     parser.add_argument("--tc_csv", type=str, default="")
+    parser.add_argument("--tickers", type=str, default="")
+    parser.add_argument("--start", type=str, default="")
+    parser.add_argument("--end", type=str, default="")
     parser.add_argument("--shots", type=int, default=0)
     parser.add_argument("--noise_p", type=float, default=0.0)
     parser.add_argument("--solver", type=str, choices=["bruteforce", "milp", "miqp"], default="bruteforce")
@@ -33,9 +36,15 @@ def main():
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     pipe = PortfolioPipeline(seed=1)
     if args.mode == "standard":
-        res = pipe.run_standard(N=args.N, K=args.K, q=args.q, p=args.p, mixer=args.mixer, warm_start=args.warm_start, alpha=args.alpha, samples=args.samples, refine_iters=args.refine_iters, refine_step=args.refine_step, formulation=args.formulation, lam_tc=args.lam_tc, shots=args.shots, noise_p=args.noise_p, solver=args.solver, objective=args.objective, noise_model=("none" if args.noise_model=="none" else args.noise_model), prices_csv=(args.prices_csv if args.prices_csv else None), tc_csv=(args.tc_csv if args.tc_csv else None))
+        tickers = [t.strip() for t in args.tickers.split(",")] if args.tickers else None
+        start = args.start if args.start else None
+        end = args.end if args.end else None
+        res = pipe.run_standard(N=args.N, K=args.K, q=args.q, p=args.p, mixer=args.mixer, warm_start=args.warm_start, alpha=args.alpha, samples=args.samples, refine_iters=args.refine_iters, refine_step=args.refine_step, formulation=args.formulation, lam_tc=args.lam_tc, shots=args.shots, noise_p=args.noise_p, solver=args.solver, objective=args.objective, noise_model=("none" if args.noise_model=="none" else args.noise_model), prices_csv=(args.prices_csv if args.prices_csv else None), tc_csv=(args.tc_csv if args.tc_csv else None), tickers=tickers, start=start, end=end)
     else:
-        res = pipe.run_adapt(N=args.N, K=args.K, q=args.q, max_layers=args.max_layers, mixer=args.mixer, warm_start=args.warm_start, alpha=args.alpha, formulation=args.formulation, lam_tc=args.lam_tc, shots=args.shots, noise_p=args.noise_p, objective=args.objective, noise_model=("none" if args.noise_model=="none" else args.noise_model), prices_csv=(args.prices_csv if args.prices_csv else None), tc_csv=(args.tc_csv if args.tc_csv else None))
+        tickers = [t.strip() for t in args.tickers.split(",")] if args.tickers else None
+        start = args.start if args.start else None
+        end = args.end if args.end else None
+        res = pipe.run_adapt(N=args.N, K=args.K, q=args.q, max_layers=args.max_layers, mixer=args.mixer, warm_start=args.warm_start, alpha=args.alpha, formulation=args.formulation, lam_tc=args.lam_tc, shots=args.shots, noise_p=args.noise_p, objective=args.objective, noise_model=("none" if args.noise_model=="none" else args.noise_model), prices_csv=(args.prices_csv if args.prices_csv else None), tc_csv=(args.tc_csv if args.tc_csv else None), tickers=tickers, start=start, end=end)
     with open(args.out, "w") as f:
         json.dump(res, f, indent=2)
     print(json.dumps(res, indent=2))

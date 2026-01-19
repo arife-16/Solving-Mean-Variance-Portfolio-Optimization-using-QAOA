@@ -1,16 +1,22 @@
 import numpy as np
-from .qaoa_core import qaoa_expectation, qaoa_expectation_ops
+from .qaoa_core import qaoa_expectation, qaoa_expectation_ops, qaoa_cvar, qaoa_cvar_ops
 
-def adapt_qaoa(psi0, energies, N, K, max_layers, mixer="xy", T=1, samples=8, step=0.1):
+def adapt_qaoa(psi0, energies, N, K, max_layers, mixer="xy", T=1, samples=8, step=0.1, objective="expectation", alpha=0.2):
     theta = np.zeros(2)
-    best = qaoa_expectation(psi0, energies, N, K, theta, mixer, T)
+    if objective == "cvar":
+        best = qaoa_cvar(psi0, energies, N, K, theta, alpha, mixer, T)
+    else:
+        best = qaoa_expectation(psi0, energies, N, K, theta, mixer, T)
     layers = 0
     while layers < max_layers:
         cand_best_val = float("inf")
         cand_best_theta = None
         for _ in range(samples):
             t = np.concatenate([theta, np.random.uniform(-1.0, 1.0, size=2)])
-            v = qaoa_expectation(psi0, energies, N, K, t, mixer, T)
+            if objective == "cvar":
+                v = qaoa_cvar(psi0, energies, N, K, t, alpha, mixer, T)
+            else:
+                v = qaoa_expectation(psi0, energies, N, K, t, mixer, T)
             if v < cand_best_val:
                 cand_best_val = v
                 cand_best_theta = t
@@ -22,7 +28,7 @@ def adapt_qaoa(psi0, energies, N, K, max_layers, mixer="xy", T=1, samples=8, ste
             break
     return theta, best, layers
 
-def adapt_qaoa_pairs(psi0, energies, N, K, max_layers, pairs, T=1, samples=8):
+def adapt_qaoa_pairs(psi0, energies, N, K, max_layers, pairs, T=1, samples=8, objective="expectation", alpha=0.2):
     theta = np.zeros(0)
     ops = []
     gate_two = 0
@@ -37,7 +43,10 @@ def adapt_qaoa_pairs(psi0, energies, N, K, max_layers, pairs, T=1, samples=8):
             for _ in range(samples):
                 t = np.concatenate([theta, np.random.uniform(-1.0, 1.0, size=2)])
                 o = ops + [("xy_pair", (i, j))]
-                v = qaoa_expectation_ops(psi0, energies, N, t, o, T)
+                if objective == "cvar":
+                    v = qaoa_cvar_ops(psi0, energies, N, t, alpha, o, T)
+                else:
+                    v = qaoa_expectation_ops(psi0, energies, N, t, o, T)
                 if v < cand_best_val:
                     cand_best_val = v
                     cand_theta = t

@@ -39,8 +39,10 @@ def main():
     ap.add_argument('--T', type=int, default=1)
     ap.add_argument('--shots', type=int, default=0)
     ap.add_argument('--noise_p', type=float, default=0.0)
-    ap.add_argument('--solver', type=str, choices=['bruteforce','milp'], default='bruteforce')
+    ap.add_argument('--solver', type=str, choices=['bruteforce','milp','miqp'], default='bruteforce')
     ap.add_argument('--pairs', type=str, choices=['ring','all'], default='ring')
+    ap.add_argument('--objective', type=str, choices=['expectation','cvar'], default='expectation')
+    ap.add_argument('--noise_model', type=str, choices=['depolarizing','bitflip','phaseflip','none'], default='depolarizing')
     ap.add_argument('--out_csv', type=str, default='results/sweep.csv')
     args = ap.parse_args()
 
@@ -55,18 +57,18 @@ def main():
     os.makedirs(os.path.dirname(args.out_csv), exist_ok=True)
     pipe = PortfolioPipeline(seed=args.seed)
 
-    headers = ['mode','N','K','p_or_layers','mixer','warm_start','formulation','alpha','lam_tc','best_energy','optimal_energy','energy_gap','cvar','overlap','gate_single','gate_two','layers','duration_sec','solver_used','shots','noise_p','pairs']
+    headers = ['mode','N','K','p_or_layers','mixer','warm_start','formulation','alpha','lam_tc','best_energy','optimal_energy','energy_gap','cvar','overlap','gate_single','gate_two','layers','duration_sec','solver_used','shots','noise_p','noise_model','objective','pairs']
     rows = []
     for mode, N, K, p, mixer, warm, form in product(modes, Ns, Ks, Ps, mixers, warms, forms):
         if mode == 'standard':
-            res = pipe.run_standard(N=N, K=K, q=args.q, p=p, mixer=mixer, T=args.T, warm_start=warm, alpha=args.alpha, samples=args.samples, refine_iters=args.refine_iters, refine_step=args.refine_step, formulation=form, lam_tc=args.lam_tc, shots=args.shots, noise_p=args.noise_p, solver=args.solver)
+            res = pipe.run_standard(N=N, K=K, q=args.q, p=p, mixer=mixer, T=args.T, warm_start=warm, alpha=args.alpha, samples=args.samples, refine_iters=args.refine_iters, refine_step=args.refine_step, formulation=form, lam_tc=args.lam_tc, shots=args.shots, noise_p=args.noise_p, solver=args.solver, objective=args.objective, noise_model=("none" if args.noise_model=="none" else args.noise_model))
             rows.append([
-                mode, N, K, p, mixer, int(warm), form, args.alpha, args.lam_tc, res['best_energy'], res['optimal_energy'], res['energy_gap'], res['cvar'], res.get('overlap',''), res['gate_counts']['single_qubit'], res['gate_counts']['two_qubit'], '', res['duration_sec'], res.get('solver_used',''), res.get('shots',''), res.get('noise_p',''), ''
+                mode, N, K, p, mixer, int(warm), form, args.alpha, args.lam_tc, res['best_energy'], res['optimal_energy'], res['energy_gap'], res['cvar'], res.get('overlap',''), res['gate_counts']['single_qubit'], res['gate_counts']['two_qubit'], '', res['duration_sec'], res.get('solver_used',''), res.get('shots',''), res.get('noise_p',''), res.get('noise_model',''), res.get('objective',''), ''
             ])
         else:
-            res = pipe.run_adapt(N=N, K=K, q=args.q, max_layers=p, mixer=mixer, T=args.T, warm_start=warm, alpha=args.alpha, formulation=form, lam_tc=args.lam_tc, pool='pairs', shots=args.shots, noise_p=args.noise_p, pairs_mode=args.pairs)
+            res = pipe.run_adapt(N=N, K=K, q=args.q, max_layers=p, mixer=mixer, T=args.T, warm_start=warm, alpha=args.alpha, formulation=form, lam_tc=args.lam_tc, pool='pairs', shots=args.shots, noise_p=args.noise_p, pairs_mode=args.pairs, objective=args.objective, noise_model=("none" if args.noise_model=="none" else args.noise_model))
             rows.append([
-                mode, N, K, p, mixer, int(warm), form, args.alpha, args.lam_tc, res['best_energy'], res['optimal_energy'], res['energy_gap'], res['cvar'], res.get('overlap',''), res['gate_counts']['single_qubit'], res['gate_counts']['two_qubit'], res['layers'], res['duration_sec'], '', res.get('shots',''), res.get('noise_p',''), res.get('pairs_mode','')
+                mode, N, K, p, mixer, int(warm), form, args.alpha, args.lam_tc, res['best_energy'], res['optimal_energy'], res['energy_gap'], res['cvar'], res.get('overlap',''), res['gate_counts']['single_qubit'], res['gate_counts']['two_qubit'], res['layers'], res['duration_sec'], '', res.get('shots',''), res.get('noise_p',''), res.get('noise_model',''), res.get('objective',''), res.get('pairs_mode','')
             ])
 
     with open(args.out_csv, 'w', newline='') as f:

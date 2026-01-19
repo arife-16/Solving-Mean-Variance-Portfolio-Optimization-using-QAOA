@@ -39,3 +39,36 @@ def solve_mvo_milp(mu, sigma, q, N, K, tc=None, lam_tc=0.0):
     if tc is not None and lam_tc != 0.0:
         val += lam_tc * (tc @ x_sol)
     return float(val), int(z)
+
+def solve_mvo_miqp(mu, sigma, q, N, K, tc=None, lam_tc=0.0):
+    try:
+        import cvxpy as cp
+    except Exception:
+        return None
+    x = cp.Variable(N, boolean=True)
+    quad = cp.quad_form(x, sigma)
+    lin = -mu @ x
+    if tc is not None and lam_tc != 0.0:
+        lin = lin + lam_tc * (tc @ x)
+    obj = q * quad + lin
+    constraints = [cp.sum(x) == K]
+    prob = cp.Problem(cp.Minimize(obj), constraints)
+    solvers = ["GUROBI", "MOSEK", "CPLEX", "SCIP", "ECOS_BB"]
+    res = None
+    for s in solvers:
+        try:
+            res = prob.solve(solver=getattr(cp, s))
+            break
+        except Exception:
+            continue
+    if res is None or x.value is None:
+        return None
+    x_sol = np.array(x.value).ravel()
+    z = 0
+    for i in range(N):
+        if x_sol[i] >= 0.5:
+            z |= (1 << i)
+    val = float(q * x_sol @ sigma @ x_sol - mu @ x_sol)
+    if tc is not None and lam_tc != 0.0:
+        val += float(lam_tc * (tc @ x_sol))
+    return float(val), int(z)

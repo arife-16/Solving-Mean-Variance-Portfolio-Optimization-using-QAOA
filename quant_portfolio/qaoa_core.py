@@ -145,7 +145,33 @@ def apply_depolarizing(probs, p):
     d = probs.shape[0]
     return (1.0 - p) * probs + p * (1.0 / d)
 
-def qaoa_expectation_shots(psi0, energies, N, K, theta, mixer="xy", T=1, shots=1024, noise_p=0.0):
+def apply_bitflip(probs, p, N):
+    if p <= 0.0:
+        return probs
+    res = probs.copy()
+    dim = probs.shape[0]
+    for i in range(N):
+        flip = np.zeros(dim, dtype=float)
+        for z in range(dim):
+            flip[z ^ (1 << i)] = probs[z]
+        res = (1.0 - p) * res + p * flip
+    return res
+
+def apply_phaseflip(probs, p, N):
+    return probs
+
+def apply_noise(probs, model, p, N):
+    if p <= 0.0:
+        return probs
+    if model == "depolarizing":
+        return apply_depolarizing(probs, p)
+    if model == "bitflip":
+        return apply_bitflip(probs, p, N)
+    if model == "phaseflip":
+        return apply_phaseflip(probs, p, N)
+    return probs
+
+def qaoa_expectation_shots(psi0, energies, N, K, theta, mixer="xy", T=1, shots=1024, noise_p=0.0, noise_model="depolarizing"):
     g, b = np.split(theta, 2)
     psi = psi0.copy()
     for t in range(len(g)):
@@ -153,15 +179,14 @@ def qaoa_expectation_shots(psi0, energies, N, K, theta, mixer="xy", T=1, shots=1
         psi = psi * phase
         psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
     probs = np.real(psi.conj() * psi)
-    if noise_p > 0.0:
-        probs = apply_depolarizing(probs, noise_p)
+    probs = apply_noise(probs, noise_model, noise_p, N)
     probs = probs / probs.sum()
     idx = np.arange(probs.shape[0])
     counts = np.random.multinomial(shots, probs)
     est = float((counts * energies).sum() / max(shots, 1))
     return est
 
-def qaoa_cvar_shots(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, shots=1024, noise_p=0.0):
+def qaoa_cvar_shots(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, shots=1024, noise_p=0.0, noise_model="depolarizing"):
     g, b = np.split(theta, 2)
     psi = psi0.copy()
     for t in range(len(g)):
@@ -169,8 +194,7 @@ def qaoa_cvar_shots(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, shots=1
         psi = psi * phase
         psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
     probs = np.real(psi.conj() * psi)
-    if noise_p > 0.0:
-        probs = apply_depolarizing(probs, noise_p)
+    probs = apply_noise(probs, noise_model, noise_p, N)
     probs = probs / probs.sum()
     idx = np.arange(probs.shape[0])
     counts = np.random.multinomial(shots, probs)
@@ -212,17 +236,16 @@ def evolve_state_ops(psi0, energies, N, theta, ops, T=1):
             psi = apply_xy_pair(psi, b[t], i, j, N, T)
     return psi
 
-def compute_overlap(psi, z_opt, noise_p=0.0, shots=0):
+def compute_overlap(psi, z_opt, noise_p=0.0, shots=0, noise_model="depolarizing"):
     probs = np.real(psi.conj() * psi)
-    if noise_p > 0.0:
-        probs = apply_depolarizing(probs, noise_p)
+    probs = apply_noise(probs, noise_model, noise_p, probs.shape[0].bit_length() - 1)
     probs = probs / max(probs.sum(), 1e-12)
     if shots and shots > 0:
         counts = np.random.multinomial(shots, probs)
         return float(counts[z_opt] / max(shots, 1))
     return float(probs[z_opt])
 
-def qaoa_expectation(psi0, energies, N, K, theta, mixer="xy", T=1):
+def qaoa_expectation(psi0, energies, N, K, theta, mixer="xy", T=1, noise_model="depolarizing", noise_p=0.0):
     g, b = np.split(theta, 2)
     psi = psi0.copy()
     for t in range(len(g)):
@@ -230,9 +253,10 @@ def qaoa_expectation(psi0, energies, N, K, theta, mixer="xy", T=1):
         psi = psi * phase
         psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
     probs = np.real(psi.conj() * psi)
+    probs = apply_noise(probs, noise_model, noise_p, N)
     return float((probs * energies).sum())
 
-def qaoa_cvar(psi0, energies, N, K, theta, alpha, mixer="xy", T=1):
+def qaoa_cvar(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, noise_model="depolarizing", noise_p=0.0):
     g, b = np.split(theta, 2)
     psi = psi0.copy()
     for t in range(len(g)):
@@ -240,6 +264,7 @@ def qaoa_cvar(psi0, energies, N, K, theta, alpha, mixer="xy", T=1):
         psi = psi * phase
         psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
     probs = np.real(psi.conj() * psi)
+    probs = apply_noise(probs, noise_model, noise_p, N)
     idx = np.argsort(energies)[::-1]
     cum = np.cumsum(probs[idx])
     thr = alpha

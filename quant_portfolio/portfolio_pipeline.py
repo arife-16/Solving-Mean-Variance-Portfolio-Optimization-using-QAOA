@@ -44,6 +44,60 @@ class PortfolioPipeline:
     def run_standard(self, N: int, K: int, q: float, p: int, mixer: str = "xy", T: int = 1, warm_start: bool = False, alpha: float = 0.2, samples: int = 32, refine_iters: int = 20, refine_step: float = 0.05, formulation: str = "mvo", lam_tc: float = 0.1, shots: int = 0, noise_p: float = 0.0, solver: str = "bruteforce", objective: str = "expectation", noise_model: str = "depolarizing", prices_csv: Optional[str] = None, tc_csv: Optional[str] = None, tickers: Optional[List[str]] = None, start: Optional[str] = None, end: Optional[str] = None, penalty: float = 100.0) -> Dict[str, Any]:
         t0 = time.time()
         problem = self._get_problem(N=N, K=K, q=q, prices_csv=prices_csv, tc_csv=tc_csv, tickers=tickers, start=start, end=end)
+        
+        # Use subspace method for large N to avoid full state vector allocation
+        if N > 24:
+            from .subspace import generate_basis, compute_energies_subspace, qaoa_expectation_subspace, evolve_state_subspace, compute_overlap_subspace
+            
+            states = generate_basis(N, K)
+            # Default to MVO formulation for subspace
+            energies = compute_energies_subspace(states, problem["means"], problem["cov"], q, N, penalty=penalty)
+            
+            def f(theta):
+                return qaoa_expectation_subspace(states, energies, N, K, theta, mixer=mixer, T=T)
+            
+            best_x = None
+            best_y = math.inf
+            
+            # Simple random search + local refinement
+            for _ in range(samples):
+                x = np.random.uniform(-2.0, 2.0, size=2 * p)
+                y = f(x)
+                if y < best_y:
+                    best_x, best_y = x, y
+            
+            for _ in range(refine_iters):
+                cand = best_x + np.random.normal(0.0, refine_step, size=best_x.shape)
+                y = f(cand)
+                if y < best_y:
+                    best_x, best_y = cand, y
+            
+            # Find optimal classically using subspace energies
+            min_idx = np.argmin(energies)
+            emin = float(energies[min_idx])
+            z_opt = int(states[min_idx])
+            
+            psi = evolve_state_subspace(states, energies, N, best_x, mixer=mixer, T=T)
+            overlap = compute_overlap_subspace(psi, states, z_opt)
+            gates = gate_counts(N, p, mixer, T)
+            end = time.time()
+            
+            return {
+                "best_energy": float(best_y),
+                "optimal_energy": float(emin),
+                "energy_gap": float(best_y - emin),
+                "cvar": 0.0, # Not implemented for subspace yet
+                "overlap": float(overlap),
+                "params": best_x.tolist(),
+                "gate_counts": gates,
+                "duration_sec": float(end - t0),
+                "solver_used": "subspace_brute",
+                "shots": 0,
+                "noise_p": 0.0,
+                "noise_model": "none",
+                "objective": objective
+            }
+
         if formulation == "mvo":
             energies = energies_full(problem["means"], problem["cov"], q, N, K=K, penalty=penalty)
         elif formulation == "mad":
@@ -111,6 +165,9 @@ class PortfolioPipeline:
         return {"best_energy": float(best_y), "optimal_energy": float(emin), "energy_gap": float(best_y - emin), "cvar": float(cvar), "overlap": float(overlap), "params": best_x.tolist(), "gate_counts": gates, "duration_sec": float(end - t0), "solver_used": solver, "shots": int(shots), "noise_p": float(noise_p), "noise_model": noise_model, "objective": objective}
 
     def run_adapt(self, N: int, K: int, q: float, max_layers: int, mixer: str = "xy", T: int = 1, warm_start: bool = False, alpha: float = 0.2, formulation: str = "mvo", lam_tc: float = 0.1, pool: str = "ring", shots: int = 0, noise_p: float = 0.0, pairs_mode: str = "ring", objective: str = "expectation", noise_model: str = "depolarizing", prices_csv: Optional[str] = None, tc_csv: Optional[str] = None, tickers: Optional[List[str]] = None, start: Optional[str] = None, end: Optional[str] = None, penalty: float = 100.0) -> Dict[str, Any]:
+        if N > 24:
+            raise NotImplementedError("ADAPT-QAOA is not yet supported for N > 24 (requires subspace implementation). Please use run_standard for large N.")
+        
         t0 = time.time()
         problem = self._get_problem(N=N, K=K, q=q, prices_csv=prices_csv, tc_csv=tc_csv, tickers=tickers, start=start, end=end)
         if formulation == "mvo":

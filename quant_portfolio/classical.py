@@ -14,6 +14,25 @@ def brute_force_k_hot(mu, sigma, q, N, K):
             best_z = z
     return best_e, best_z
 
+def brute_force_subspace(mu, sigma, q, N, K):
+    """
+    Brute force optimization using subspace generation for large N.
+    Avoids generating 2^N states.
+    """
+    from .subspace import generate_basis, compute_energies_subspace
+    
+    states = generate_basis(N, K)
+    if len(states) == 0:
+        return float("inf"), 0
+        
+    energies = compute_energies_subspace(states, mu, sigma, q, N)
+    
+    min_idx = np.argmin(energies)
+    best_e = float(energies[min_idx])
+    best_z = int(states[min_idx])
+    
+    return best_e, best_z
+
 def local_search(mu, sigma, q, N, K, z_init):
     z = z_init
     improved = True

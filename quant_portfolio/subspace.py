@@ -14,13 +14,9 @@ def generate_basis(N, K):
     if K == N:
         return np.array([(1 << N) - 1], dtype=np.int64)
     
-    # Estimate size to ensure we don't blow memory immediately
     # For N=30, K=15, size is ~155 million integers (1.2GB)
     count = comb(N, K, exact=True)
-    
-    # For smaller N, recursion is fine. For larger N, we might want to be iterative
-    # but Python recursion limit is 1000, N=30 is fine.
-    
+        
     # Logic:
     # Elements with MSB (bit N-1) = 0: generate_basis(N-1, K)
     # Elements with MSB (bit N-1) = 1: generate_basis(N-1, K-1) + 2^(N-1)
@@ -29,8 +25,6 @@ def generate_basis(N, K):
     basis = np.empty(count, dtype=np.int64)
     
     # Iterative approach to avoid deep recursion stack overhead with large arrays
-    # But recursive structure is simplest for logic. 
-    # Let's use a helper that fills a slice.
     
     _fill_basis(basis, 0, N, K, 0)
     return basis
@@ -192,9 +186,7 @@ def apply_xy_mixer_subspace(psi, states, beta, N, pairs_list):
         
         # We need to find states with exactly one of i, j set.
         # (states & mask_pair) must be mask_i or mask_j
-        # But we only need to find one side (e.g., 01) and find its partner (10).
-        # Let's find states with (states & mask_pair) == mask_i (i.e. bit i=1, j=0)
-        
+        # But we only need to find one side (e.g., 01) and find its partner (10).        
         candidates = states & mask_pair
         
         # Indices where bit i is 1 and j is 0

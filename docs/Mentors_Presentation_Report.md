@@ -62,15 +62,15 @@
   - Best-practice scaling, parameterization and mixer-specific adjustments guided our parameter layout and gate-count metrics.
 
 ## Demonstration Plan
+- Scaled Benchmark (N=24, Correlated Data):
+  - Orchestrated via `scripts/orchestrate_experiments.py` to compare Standard vs ADAPT QAOA on correlated assets with market/sector factors.
+  - Generates scaling plots (`scaling_energy_gap.png`) showing performance up to 24 qubits.
+- Noise Robustness Analysis:
+  - Sweeps bit-flip noise probabilities from 0% to 25% (`noise_p` up to 0.25) to test algorithmic resilience.
+  - Generates `noise_robustness.png` to identify breakdown points.
 - Single experiment (Standard QAOA, MVO):
-  - Command: `python3 scripts/run_portfolio_experiments.py --mode standard --N 12 --K 6 --q 0.7 --p 2 --mixer xy --alpha 0.2 --out results/standard_mvo.json`
-  - Shows energy, CVaR, overlap, gate counts, and runtime.
-- ADAPT-QAOA (pairwise pool):
-  - Command: `python3 scripts/run_portfolio_experiments.py --mode adapt --N 12 --K 6 --q 0.7 --max_layers 3 --mixer xy --alpha 0.2 --out results/adapt_pairs_mvo.json`
-  - Reports layers used, gate counts, CVaR, overlap, and runtime.
-- Noisy shot-based evaluation:
-  - Sweep: `python3 benchmarks/run_sweep.py --N_list 12 --K_list 6 --p_list 1,2 --mixers xy --warm_list 0,1 --formulations mvo,mvo_tc --modes standard --shots 1024 --noise_p 0.03 --solver milp --out_csv results/standard_mip_noisy.csv`
-  - CSV consolidates metrics for mentor review.
+  - Command: `python3 scripts/run_portfolio_experiments.py --mode standard --N 24 --K 12 --q 0.7 --p 2 --mixer xy --alpha 0.2 --out results/standard_mvo.json`
+  - Shows energy, CVaR, overlap, gate counts, and runtime for large-scale instance.
 
 ## File References
 - Pipeline
@@ -103,6 +103,18 @@
   - Depolarizing is a simplification; add device-specific channels (bit-flip, phase-flip) as needed.
 - Operator pool selection:
   - Current pairwise pool uses ring or all pairs; extend to heuristic scoring of pairs and add pruning to manage growth.
+
+## Limitations (Proof-of-Concept Status)
+- **Unitary Decomposition**:
+  - Reported gate counts are theoretical upper bounds based on standard trotterization formulas. They have not been validated against a hardware-native transpiler (e.g., Qiskit, Cirq) and do not account for swap overheads on restricted connectivity graphs.
+- **ADAPT-QAOA Efficiency**:
+  - The current adaptive loop re-evaluates expectation values for every candidate pair in the operator pool using full state-vector simulation. While vectorized optimizations now allow scaling to $N=24$, it remains computationally expensive (minutes per run) compared to diagonal precomputation methods.
+- **Noise Model**:
+  - The implementation now includes bit-flip and phase-flip noise models applied to probabilities (`quant_portfolio/qaoa_core.py`), allowing for more realistic noise robustness analysis up to 25% error rates. However, it still relies on phenomenological application rather than full density matrix evolution.
+- **Warm-Start Fallback**:
+  - When Gurobi/MIQP is unavailable, the system falls back to a QP relaxation (if `cvxpy` is installed) or a naive heuristic. We have integrated `cvxpy` as a robust fallback for covariance-aware initialization.
+- **Classical Solver Baseline**:
+  - We have added support for Gurobi/CPLEX (via `mip.py`) if installed, while retaining `pulp` (CBC) as a universally available baseline. Performance comparisons now explicitly note the solver used.
 
 ## Next Steps
 - Integrate real historical data and transaction fee models.

@@ -4,8 +4,28 @@ import random
 def generate_synthetic_returns(N: int, T: int, seed: int):
     random.seed(seed)
     np.random.seed(seed)
-    base = np.random.normal(0.0005, 0.01, size=(N, T))
-    return base
+    # Generate correlated assets (market factor + sector factors + idiosyncratic)
+    # 1. Market mode
+    mkt = np.random.normal(0.0005, 0.01, size=T)
+    # 2. Random sectors (e.g., N/2 assets per sector)
+    n_sectors = max(1, N // 4)
+    sectors = []
+    for _ in range(n_sectors):
+        sectors.append(np.random.normal(0.0, 0.005, size=T))
+    
+    returns = np.zeros((N, T))
+    for i in range(N):
+        # Assign to a random sector
+        sec_idx = i % n_sectors
+        # Idiosyncratic
+        idio = np.random.normal(0.0, 0.015, size=T)
+        # Beta to market and sector
+        beta_mkt = np.random.uniform(0.5, 1.5)
+        beta_sec = np.random.uniform(0.5, 1.5)
+        
+        returns[i] = beta_mkt * mkt + beta_sec * sectors[sec_idx] + idio
+        
+    return returns
 
 def compute_mu_sigma(returns: np.ndarray):
     mu = returns.mean(axis=1)

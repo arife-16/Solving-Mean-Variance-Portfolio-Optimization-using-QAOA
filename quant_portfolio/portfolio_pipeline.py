@@ -41,18 +41,18 @@ class PortfolioPipeline:
             tc = generate_transaction_costs(N, self.seed)
         return {"N": N, "K": K, "q": q, "means": mu, "cov": sigma, "returns": rets, "tc": tc}
 
-    def run_standard(self, N: int, K: int, q: float, p: int, mixer: str = "xy", T: int = 1, warm_start: bool = False, alpha: float = 0.2, samples: int = 32, refine_iters: int = 20, refine_step: float = 0.05, formulation: str = "mvo", lam_tc: float = 0.1, shots: int = 0, noise_p: float = 0.0, solver: str = "bruteforce", objective: str = "expectation", noise_model: str = "depolarizing", prices_csv: Optional[str] = None, tc_csv: Optional[str] = None, tickers: Optional[List[str]] = None, start: Optional[str] = None, end: Optional[str] = None) -> Dict[str, Any]:
+    def run_standard(self, N: int, K: int, q: float, p: int, mixer: str = "xy", T: int = 1, warm_start: bool = False, alpha: float = 0.2, samples: int = 32, refine_iters: int = 20, refine_step: float = 0.05, formulation: str = "mvo", lam_tc: float = 0.1, shots: int = 0, noise_p: float = 0.0, solver: str = "bruteforce", objective: str = "expectation", noise_model: str = "depolarizing", prices_csv: Optional[str] = None, tc_csv: Optional[str] = None, tickers: Optional[List[str]] = None, start: Optional[str] = None, end: Optional[str] = None, penalty: float = 100.0) -> Dict[str, Any]:
         t0 = time.time()
         problem = self._get_problem(N=N, K=K, q=q, prices_csv=prices_csv, tc_csv=tc_csv, tickers=tickers, start=start, end=end)
         if formulation == "mvo":
-            energies = energies_full(problem["means"], problem["cov"], q, N)
+            energies = energies_full(problem["means"], problem["cov"], q, N, K=K, penalty=penalty)
         elif formulation == "mad":
-            energies = energies_full_mad(problem["returns"], q, N)
+            energies = energies_full_mad(problem["returns"], q, N, K=K, penalty=penalty)
         elif formulation == "cvar":  
             from .formulations_extended import energies_full_cvar
             energies = energies_full_cvar(problem["returns"], q, N, alpha=0.05)
         else:
-            energies = energies_full_mvo_tc(problem["means"], problem["cov"], q, N, problem["tc"], lam_tc)
+            energies = energies_full_mvo_tc(problem["means"], problem["cov"], q, N, problem["tc"], lam_tc, K=K, penalty=penalty)
         psi0 = warm_start_state(problem["means"], problem["cov"], K) if warm_start else dicke_state(N, K)
         def f(theta):
             if objective == "cvar":
@@ -110,19 +110,19 @@ class PortfolioPipeline:
         end = time.time()
         return {"best_energy": float(best_y), "optimal_energy": float(emin), "energy_gap": float(best_y - emin), "cvar": float(cvar), "overlap": float(overlap), "params": best_x.tolist(), "gate_counts": gates, "duration_sec": float(end - t0), "solver_used": solver, "shots": int(shots), "noise_p": float(noise_p), "noise_model": noise_model, "objective": objective}
 
-    def run_adapt(self, N: int, K: int, q: float, max_layers: int, mixer: str = "xy", T: int = 1, warm_start: bool = False, alpha: float = 0.2, formulation: str = "mvo", lam_tc: float = 0.1, pool: str = "ring", shots: int = 0, noise_p: float = 0.0, pairs_mode: str = "ring", objective: str = "expectation", noise_model: str = "depolarizing", prices_csv: Optional[str] = None, tc_csv: Optional[str] = None, tickers: Optional[List[str]] = None, start: Optional[str] = None, end: Optional[str] = None) -> Dict[str, Any]:
+    def run_adapt(self, N: int, K: int, q: float, max_layers: int, mixer: str = "xy", T: int = 1, warm_start: bool = False, alpha: float = 0.2, formulation: str = "mvo", lam_tc: float = 0.1, pool: str = "ring", shots: int = 0, noise_p: float = 0.0, pairs_mode: str = "ring", objective: str = "expectation", noise_model: str = "depolarizing", prices_csv: Optional[str] = None, tc_csv: Optional[str] = None, tickers: Optional[List[str]] = None, start: Optional[str] = None, end: Optional[str] = None, penalty: float = 100.0) -> Dict[str, Any]:
         t0 = time.time()
         problem = self._get_problem(N=N, K=K, q=q, prices_csv=prices_csv, tc_csv=tc_csv, tickers=tickers, start=start, end=end)
         if formulation == "mvo":
-            energies = energies_full(problem["means"], problem["cov"], q, N)
+            energies = energies_full(problem["means"], problem["cov"], q, N, K=K, penalty=penalty)
         elif formulation == "mad":
-            energies = energies_full_mad(problem["returns"], q, N)
+            energies = energies_full_mad(problem["returns"], q, N, K=K, penalty=penalty)
         elif formulation == "cvar":  
             from .formulations_extended import energies_full_cvar
             energies = energies_full_cvar(problem["returns"], q, N, alpha=0.05)
             
         else:
-            energies = energies_full_mvo_tc(problem["means"], problem["cov"], q, N, problem["tc"], lam_tc)
+            energies = energies_full_mvo_tc(problem["means"], problem["cov"], q, N, problem["tc"], lam_tc, K=K, penalty=penalty)
         psi0 = warm_start_state(problem["means"], problem["cov"], K) if warm_start else dicke_state(N, K)
         if pool == "pairs":
             if mixer == "x":
@@ -138,7 +138,7 @@ class PortfolioPipeline:
             psi = evolve_state_ops(psi0, energies, N, theta, ops, T=T)
             overlap = compute_overlap(psi, z_opt, noise_p=noise_p, shots=shots, noise_model=noise_model)
             end = time.time()
-            return {"best_energy": float(best), "optimal_energy": float(emin), "energy_gap": float(best - emin), "cvar": float(cvar), "overlap": float(overlap), "params": theta.tolist(), "layers": int(layers), "gate_counts": gates, "duration_sec": float(end - start), "shots": int(shots), "noise_p": float(noise_p), "pairs_mode": pairs_mode, "noise_model": noise_model, "objective": objective}
+            return {"best_energy": float(best), "optimal_energy": float(emin), "energy_gap": float(best - emin), "cvar": float(cvar), "overlap": float(overlap), "params": theta.tolist(), "layers": int(layers), "gate_counts": gates, "duration_sec": float(end - t0), "shots": int(shots), "noise_p": float(noise_p), "pairs_mode": pairs_mode, "noise_model": noise_model, "objective": objective}
         else:
             theta, best, layers = adapt_qaoa(psi0, energies, N, K, max_layers, mixer=mixer, T=T, objective=objective, alpha=alpha)
             if shots and shots > 0:
@@ -150,4 +150,4 @@ class PortfolioPipeline:
         psi = evolve_state(psi0, energies, N, theta, mixer=mixer, T=T)
         overlap = compute_overlap(psi, z_opt, noise_p=noise_p, shots=shots, noise_model=noise_model)
         end = time.time()
-        return {"best_energy": float(best), "optimal_energy": float(emin), "energy_gap": float(best - emin), "cvar": float(cvar), "overlap": float(overlap), "params": theta.tolist(), "layers": int(layers), "gate_counts": gates, "duration_sec": float(end - start), "shots": int(shots), "noise_p": float(noise_p), "noise_model": noise_model, "objective": objective}
+        return {"best_energy": float(best), "optimal_energy": float(emin), "energy_gap": float(best - emin), "cvar": float(cvar), "overlap": float(overlap), "params": theta.tolist(), "layers": int(layers), "gate_counts": gates, "duration_sec": float(end - t0), "shots": int(shots), "noise_p": float(noise_p), "noise_model": noise_model, "objective": objective}

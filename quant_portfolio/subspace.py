@@ -65,6 +65,9 @@ def compute_energies_subspace(states, mu, sigma, q, N, penalty=100.0):
     # For large N, extracting bits into (N, Samples) bool array is huge (30 * 155M bytes ~ 4.5GB).
     # We should iterate over bits instead.
     
+    # Clean inputs
+    mu = np.nan_to_num(mu, nan=0.0, posinf=0.0, neginf=0.0)
+    sigma = np.nan_to_num(sigma, nan=0.0, posinf=0.0, neginf=0.0)
     # Linear term: -mu @ x
     # Iterate over assets i
     for i in range(N):
@@ -93,13 +96,13 @@ def compute_energies_subspace(states, mu, sigma, q, N, penalty=100.0):
             
     return vals
 
-def qaoa_expectation_subspace(states, energies, N, K, theta, mixer='xy', T=1):
+def qaoa_expectation_subspace(states, energies, N, K, theta, mixer='xy', T=1, psi0=None):
     """
     Computes QAOA expectation value in the subspace.
     """
     g, b = np.split(theta, 2)
     dim = len(states)
-    psi = np.ones(dim, dtype=complex) / np.sqrt(dim)
+    psi = np.ones(dim, dtype=complex) / np.sqrt(dim) if psi0 is None else psi0.copy()
     
     for t in range(len(g)):
         # Phase separator
@@ -123,15 +126,44 @@ def qaoa_expectation_subspace(states, energies, N, K, theta, mixer='xy', T=1):
                 psi = apply_xy_mixer_subspace(psi, states, beta_step, N, [(N - 1, 0)])
                 
     probs = np.real(psi.conj() * psi)
+    probs = probs / max(probs.sum(), 1e-12)
     return float(np.sum(probs * energies))
 
-def evolve_state_subspace(states, energies, N, theta, mixer='xy', T=1):
+def qaoa_cvar_subspace(states, energies, N, K, theta, alpha=0.2, mixer='xy', T=1, psi0=None):
+    g, b = np.split(theta, 2)
+    dim = len(states)
+    psi = np.ones(dim, dtype=complex) / np.sqrt(dim) if psi0 is None else psi0.copy()
+    for t in range(len(g)):
+        psi *= np.exp(-1j * g[t] * energies)
+        if mixer == 'xy':
+            beta_step = 4 * b[t] / T
+            for _ in range(T):
+                pairs_1 = [(i, i + 1) for i in range(0, N - 1, 2)]
+                psi = apply_xy_mixer_subspace(psi, states, beta_step, N, pairs_1)
+                pairs_2 = [(i, i + 1) for i in range(1, N - 1, 2)]
+                psi = apply_xy_mixer_subspace(psi, states, beta_step, N, pairs_2)
+                psi = apply_xy_mixer_subspace(psi, states, beta_step, N, [(N - 1, 0)])
+    probs = np.real(psi.conj() * psi)
+    probs = probs / max(probs.sum(), 1e-12)
+    idx = np.argsort(energies)[::-1]
+    thr = alpha
+    s = 0.0
+    w = 0.0
+    for k in range(len(idx)):
+        if w >= thr:
+            break
+        take = min(thr - w, probs[idx[k]])
+        s += energies[idx[k]] * take
+        w += take
+    return float(s / max(thr, 1e-8))
+
+def evolve_state_subspace(states, energies, N, theta, mixer='xy', T=1, psi0=None):
     """
     Evolves the state in the subspace and returns the final state vector.
     """
     g, b = np.split(theta, 2)
     dim = len(states)
-    psi = np.ones(dim, dtype=complex) / np.sqrt(dim)
+    psi = np.ones(dim, dtype=complex) / np.sqrt(dim) if psi0 is None else psi0.copy()
     
     for t in range(len(g)):
         # Phase separator

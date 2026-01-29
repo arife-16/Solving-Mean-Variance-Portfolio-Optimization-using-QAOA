@@ -14,23 +14,25 @@ def main():
     os.makedirs('results/plots', exist_ok=True)
     
     # 1. Scaling Performance: Energy Gap vs N
-    # Filter for Experiment 1 (shots=0, p_max_layers=2)
-    subset_scaling = df[(df['shots'] == 0) & (df['p_max_layers'] == 2) & (df['mixer'] == 'xy')]
+    # Show Standard (p=2) vs ADAPT (p=3), both xy, shots=0
+    subset_scaling_std = df[(df['shots'] == 0) & (df['p_max_layers'] == 2) & (df['mixer'] == 'xy') & (df['mode'] == 'standard')]
+    subset_scaling_adapt = df[(df['shots'] == 0) & (df['p_max_layers'] == 3) & (df['mixer'] == 'xy') & (df['mode'] == 'adapt')]
+    subset_scaling = pd.concat([subset_scaling_std, subset_scaling_adapt], ignore_index=True)
     
     if not subset_scaling.empty:
         # Group by mode and N, calculate mean and std
-        grouped = subset_scaling.groupby(['mode', 'N']).agg({
+        grouped = subset_scaling.groupby(['mode', 'N'], as_index=False).agg({
             'energy_gap': ['mean', 'std'],
             'duration_sec': ['mean', 'std']
-        }).reset_index()
+        })
         
         plt.figure(figsize=(10, 6))
         for mode in grouped['mode'].unique():
-            data = grouped[grouped['mode'] == mode]
+            data = grouped[grouped[('mode', '')] == mode] if isinstance(grouped.columns, pd.MultiIndex) else grouped[grouped['mode'] == mode]
             plt.errorbar(
-                data['N'], 
-                data['energy_gap']['mean'], 
-                yerr=data['energy_gap']['std'], 
+                data[('N', '')] if isinstance(grouped.columns, pd.MultiIndex) else data['N'],
+                data[('energy_gap', 'mean')] if isinstance(grouped.columns, pd.MultiIndex) else data['energy_gap'],
+                yerr=data[('energy_gap', 'std')] if isinstance(grouped.columns, pd.MultiIndex) else None,
                 marker='o', 
                 label=mode, 
                 capsize=5
@@ -46,11 +48,11 @@ def main():
 
         plt.figure(figsize=(10, 6))
         for mode in grouped['mode'].unique():
-            data = grouped[grouped['mode'] == mode]
+            data = grouped[grouped[('mode', '')] == mode] if isinstance(grouped.columns, pd.MultiIndex) else grouped[grouped['mode'] == mode]
             plt.errorbar(
-                data['N'], 
-                data['duration_sec']['mean'], 
-                yerr=data['duration_sec']['std'],
+                data[('N', '')] if isinstance(grouped.columns, pd.MultiIndex) else data['N'],
+                data[('duration_sec', 'mean')] if isinstance(grouped.columns, pd.MultiIndex) else data['duration_sec'],
+                yerr=data[('duration_sec', 'std')] if isinstance(grouped.columns, pd.MultiIndex) else None,
                 marker='o', 
                 label=mode,
                 capsize=5
@@ -65,7 +67,7 @@ def main():
         plt.savefig('results/plots/scaling_runtime.png')
         plt.close()
 
-    # 2. Warm Start Impact
+    # 2. Warm Start Impact (Standard, N=20, p=1)
     subset_warm = df[(df['N'] == 20) & (df['p_max_layers'] == 1) & (df['mixer'] == 'xy') & (df['mode'] == 'standard')]
     if not subset_warm.empty:
         grouped_warm = subset_warm.groupby('warm_start')['energy_gap'].agg(['mean', 'std']).reset_index()
@@ -86,6 +88,48 @@ def main():
         plt.savefig('results/plots/warm_start_impact.png')
         plt.close()
 
+    # 2b. Warm vs Cold for ADAPT (p=3), across N
+    subset_adapt_wc = df[(df['mode'] == 'adapt') & (df['p_max_layers'] == 3) & (df['mixer'] == 'xy')]
+    if not subset_adapt_wc.empty:
+        grouped_adapt_wc = subset_adapt_wc.groupby(['N', 'warm_start'])['energy_gap'].agg(['mean', 'std']).reset_index()
+        plt.figure(figsize=(10, 6))
+        for warm in sorted(grouped_adapt_wc['warm_start'].unique()):
+            data = grouped_adapt_wc[grouped_adapt_wc['warm_start'] == warm]
+            plt.errorbar(
+                data['N'],
+                data['mean'],
+                yerr=data['std'],
+                marker='o',
+                label=f"adapt warm_start={warm}",
+                capsize=5
+            )
+        plt.title('ADAPT-QAOA: Warm vs Cold (p=3, xy)')
+        plt.ylabel('Energy Gap')
+        plt.xlabel('Number of Assets (N)')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig('results/plots/adapt_warm_vs_cold.png')
+        plt.close()
+
+    # 5. Overlay: Standard vs ADAPT (cold/warm)
+    std_overlay = df[(df['mode'] == 'standard') & (df['mixer'] == 'xy') & (df['shots'] == 0) & (df['p_max_layers'] == 2)]
+    adapt_cold_overlay = df[(df['mode'] == 'adapt') & (df['mixer'] == 'xy') & (df['shots'] == 0) & (df['p_max_layers'] == 3) & (df['warm_start'] == 0)]
+    adapt_warm_overlay = df[(df['mode'] == 'adapt') & (df['mixer'] == 'xy') & (df['shots'] == 0) & (df['p_max_layers'] == 3) & (df['warm_start'] == 1)]
+    if not std_overlay.empty and not adapt_cold_overlay.empty and not adapt_warm_overlay.empty:
+        g_std = std_overlay.groupby('N')['energy_gap'].agg(['mean', 'std']).reset_index()
+        g_cold = adapt_cold_overlay.groupby('N')['energy_gap'].agg(['mean', 'std']).reset_index()
+        g_warm = adapt_warm_overlay.groupby('N')['energy_gap'].agg(['mean', 'std']).reset_index()
+        plt.figure(figsize=(10, 6))
+        plt.errorbar(g_std['N'], g_std['mean'], yerr=g_std['std'], marker='o', label='standard (p=2)', capsize=5)
+        plt.errorbar(g_cold['N'], g_cold['mean'], yerr=g_cold['std'], marker='o', label='adapt cold (p=3)', capsize=5)
+        plt.errorbar(g_warm['N'], g_warm['mean'], yerr=g_warm['std'], marker='o', label='adapt warm (p=3)', capsize=5)
+        plt.title('Standard vs ADAPT (Cold/Warm) - Energy Gap vs N')
+        plt.ylabel('Energy Gap')
+        plt.xlabel('Number of Assets (N)')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig('results/plots/standard_vs_adapt_overlay.png')
+        plt.close()
     # 3. Mixer Comparison
     subset_mixer = df[(df['N'] == 16) & (df['p_max_layers'] == 1) & (df['warm_start'] == 0) & (df['mode'] == 'standard')]
     if not subset_mixer.empty:

@@ -1,0 +1,23 @@
+{
+  "best_energy": 0.4353707389800221,
+  "optimal_energy": -0.14918421727870587,
+  "energy_gap": 0.584554956258728,
+  "cvar": 1.0258184598441085,
+  "overlap": 0.005268670025116301,
+  "params": [
+    -0.7478905723274527,
+    2.0167134887628424,
+    0.3165188122649827,
+    -0.46845162448361133
+  ],
+  "gate_counts": {
+    "single_qubit": 0,
+    "two_qubit": 24
+  },
+  "duration_sec": 2.2932589054107666,
+  "solver_used": "bruteforce",
+  "shots": 0,
+  "noise_p": 0.0,
+  "noise_model": "depolarizing",
+  "objective": "expectation"
+}

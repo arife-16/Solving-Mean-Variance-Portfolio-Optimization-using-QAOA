@@ -1,0 +1,2 @@
+N,mode,layers,two_qubit_gates,epsilon,P_success,P_fail,bitflip_noise_p,modeled_note
+16,adapt,0,16,0.01,0.8514577710948755,0.14854222890512447,0.01,Bitflip applies post-measurement flips; hardware error compounds per gate

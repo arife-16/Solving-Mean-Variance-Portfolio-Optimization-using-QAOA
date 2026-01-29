@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 def relax_mvo_qp(mu, sigma, q, N, K):
     try:
@@ -20,6 +21,44 @@ def relax_mvo_qp(mu, sigma, q, N, K):
     if res is None or x.value is None:
         return None
     return np.array(x.value).ravel()
+
+def solve_mad_lp(returns, N, K):
+    try:
+        import pulp
+    except Exception:
+        return None
+    T = returns.shape[0]
+    prob = pulp.LpProblem("mad_lp", pulp.LpMinimize)
+    w = [pulp.LpVariable(f"w_{i}", lowBound=0.0, upBound=1.0, cat=pulp.LpContinuous) for i in range(N)]
+    mu = pulp.LpVariable("mu", lowBound=None, upBound=None, cat=pulp.LpContinuous)
+    u = [pulp.LpVariable(f"u_{t}", lowBound=0.0, cat=pulp.LpContinuous) for t in range(T)]
+    # Portfolio returns per period: r_p(t) = sum_i w_i * r_{t,i}
+    # Constraints for absolute deviations: u_t >= r_p(t) - mu and u_t >= -(r_p(t) - mu)
+    for t in range(T):
+        rp_t = pulp.lpSum([w[i] * float(returns[t, i]) for i in range(N)])
+        prob += u[t] >= rp_t - mu
+        prob += u[t] >= -(rp_t - mu)
+    # Sum of weights equals 1 (normalized budget). To map to K selections later, we will pick top-K.
+    prob += pulp.lpSum(w) == 1.0
+    # Objective: minimize MAD minus mean return (risk-return trade-off)
+    mean_ret = (1.0 / float(T)) * pulp.lpSum([pulp.lpSum([w[i] * float(returns[t, i]) for i in range(N)]) for t in range(T)])
+    mad = (1.0 / float(T)) * pulp.lpSum(u)
+    prob += mad - mean_ret
+    prob.solve(pulp.PULP_CBC_CMD(msg=False))
+    if pulp.LpStatus[prob.status] != "Optimal":
+        return None
+    w_sol = np.array([pulp.value(w[i]) for i in range(N)], dtype=float)
+    # Construct a K-hot bitstring by selecting top-K weights
+    idx = np.argsort(-w_sol)[:K]
+    z = 0
+    for i in idx:
+        z |= (1 << int(i))
+    # Compute objective value for selected discrete portfolio for reporting
+    rp = returns @ (w_sol)
+    mu_p = rp.mean()
+    mad_val = np.abs(rp - mu_p).mean()
+    val = float(mad_val - mu_p)
+    return float(val), int(z)
 
 def solve_mvo_milp(mu, sigma, q, N, K, tc=None, lam_tc=0.0):
     try:

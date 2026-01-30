@@ -45,7 +45,12 @@ def energies_full(mu, sigma, q, N, K=None, penalty=100.0):
 def energy_mad_bitstring(returns, q, x_bits):
     x = np.array(x_bits, dtype=float)
     k = max(int(x.sum()), 1)
-    rp = (returns.T @ x) / k
+    
+    if returns.shape[0] < returns.shape[1]: 
+        rp = (returns.T @ x) / k
+    else:
+        rp = (returns @ x) / k
+    
     mu_p = rp.mean()
     mad = np.abs(rp - mu_p).mean()
     exp_ret = rp.mean()

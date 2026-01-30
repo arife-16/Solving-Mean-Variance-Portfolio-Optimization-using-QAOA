@@ -25,7 +25,7 @@ class PortfolioPipeline:
                 from .data_loader import fetch_real_data, compute_returns_from_prices, annualized_mu_sigma
                 prices_df = fetch_real_data(tickers, start, end)
                 rets = compute_returns_from_prices(prices_df, method="log")
-                mu, sigma = annualized_mu_sigma(rets)
+                mu, sigma, rets = annualized_mu_sigma(rets)  # ← Get transposed returns
             except Exception:
                 rets = None
         if rets is None and prices_csv:
@@ -34,6 +34,7 @@ class PortfolioPipeline:
             mu, sigma = compute_mu_sigma(rets)
         if rets is None:
             rets = generate_synthetic_returns(N, 60, self.seed)
+            rets = rets.T
             mu, sigma = compute_mu_sigma(rets)
         if tc_csv:
             tc = load_transaction_costs_csv(tc_csv)

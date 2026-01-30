@@ -2,13 +2,16 @@
 import numpy as np
 
 def energy_cvar_bitstring(returns, q, x_bits, alpha=0.05):
-    """CVaR risk measure (tail risk focus)"""
     x = np.array(x_bits, dtype=float)
     k = max(int(x.sum()), 1)
     
-    portfolio_returns = (returns.T @ x) / k
-    mean_return = portfolio_returns.mean()
+    # Auto-detect shape
+    if returns.shape[0] < returns.shape[1]:
+        portfolio_returns = (returns.T @ x) / k
+    else:
+        portfolio_returns = (returns @ x) / k
     
+    mean_return = portfolio_returns.mean()
     cutoff_idx = max(1, int(alpha * len(portfolio_returns)))
     worst_returns = np.sort(portfolio_returns)[:cutoff_idx]
     cvar = worst_returns.mean()

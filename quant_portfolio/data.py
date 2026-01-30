@@ -25,7 +25,7 @@ def generate_synthetic_returns(N: int, T: int, seed: int):
         
         returns[i] = beta_mkt * mkt + beta_sec * sectors[sec_idx] + idio
         
-    return returns
+    return returns.T
 
 def compute_mu_sigma(returns: np.ndarray):
     mu = returns.mean(axis=1)

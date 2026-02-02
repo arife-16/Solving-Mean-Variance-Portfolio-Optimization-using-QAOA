@@ -36,8 +36,10 @@
 - Fallback:
   - If integer solver is unavailable, QP relaxation is solved and rounded.
 
-## Warm-Start
-- QP relaxation for MVO is solved to produce continuous weights used to bias the initial state when `--warm_start` is set.
+## Biased Initialization (formerly "Warm-Start")
+- We solve a QP relaxation for MVO to produce continuous weights and use them to bias the initial state when `--warm_start` is set.
+- This is a biased initialization; mixer Hamiltonian is not modified to have the biased state as its ground state.
+- Future work: implement true Warm-Start QAOA mixers following Egger et al. so the dynamics rotate around the biased state rather than scattering it.
 
 ## Mixers
 - `x`: RX all-qubit mixer.
@@ -50,3 +52,13 @@
 ## Notes
 - Commercial solvers are optional; installation enables stronger MIQP baselines.
 - For reproducibility, synthetic mode can be used across environments.
+
+## Limitations
+- Real-data overlap can be low without error mitigation; current results reflect worst-case unmitigated performance.
+- ADAPT-QAOA uses simple operator selection and parameter search; gradient-based scoring and stronger optimizers are future work.
+- Warm-start in subspace relies on relaxed QP weights and may not universally improve performance on historical data.
+- Noise modeling is simplified (bitflip/depolarizing for shots); no readout error mitigation layer is integrated yet.
+- Large-N ADAPT uses K-hot subspace; runtime grows with combinatorial basis size and may be heavy for high N and K.
+- Covariance on historical returns uses np.cov with clipping/cleansing; still sensitive to extreme market events.
+- Theoretical hardware error accumulation differs from simplified models; see results/noise_comparison.csv for comparison.
+- Required shots for 99% confidence are added in results/large_scale_results.csv to contextualize low overlaps.

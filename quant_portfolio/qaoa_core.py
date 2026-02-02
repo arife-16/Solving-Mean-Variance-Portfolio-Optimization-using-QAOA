@@ -25,6 +25,8 @@ def warm_start_state(mu, sigma, K):
         w = np.array([np.log(p[i] / (1 - p[i])) for i in range(N)])
     else:
         w = x
+    c = np.clip(w, 0.0, 1.0)
+    thetas = 2.0 * np.arcsin(np.sqrt(c))
     dim = 1 << N
     amp = np.zeros(dim, dtype=float)
     for z in range(dim):
@@ -35,14 +37,22 @@ def warm_start_state(mu, sigma, K):
                     s += w[i]
             amp[z] = np.exp(s)
     if amp.sum() == 0:
-        return dicke_state(N, K)
+        return dicke_state(N, K), thetas
     psi = amp / np.linalg.norm(amp)
-    return psi.astype(complex)
+    return psi.astype(complex), thetas
 
 def rx(theta):
     c = np.cos(theta / 2.0)
     s = -1j * np.sin(theta / 2.0)
     return np.array([[c, s], [s, c]], dtype=complex)
+
+def ry(theta):
+    c = np.cos(theta / 2.0)
+    s = np.sin(theta / 2.0)
+    return np.array([[c, -s], [s, c]], dtype=complex)
+
+def rz(theta):
+    return np.array([[np.exp(-1j * theta / 2.0), 0], [0, np.exp(1j * theta / 2.0)]], dtype=complex)
 
 def xy_unitary(beta):
     X = np.array([[0, 1], [1, 0]], dtype=complex)
@@ -50,6 +60,7 @@ def xy_unitary(beta):
     H = np.kron(X, X) + np.kron(Y, Y)
     vals, vecs = np.linalg.eigh(H)
     U = (vecs @ np.diag(np.exp(-1j * beta * vals)) @ vecs.conj().T)
+    U = np.nan_to_num(U, nan=0.0, posinf=0.0, neginf=0.0)
     return U
 
 def apply_xy_pair(state, beta, i, j, N, T):
@@ -66,17 +77,48 @@ def apply_two_qubit(state, U, i, j, N):
     psi = state.reshape([2] * N)
     psi = np.moveaxis(psi, [i, j], [0, 1])
     s = psi.reshape(4, -1)
-    s = U @ s
+    U = np.nan_to_num(U, nan=0.0, posinf=0.0, neginf=0.0)
+    s = np.nan_to_num(s, nan=0.0, posinf=0.0, neginf=0.0)
+    U = np.asarray(U, dtype=np.complex128, order='C')
+    s = np.asarray(s, dtype=np.complex128, order='C')
+    s = np.einsum('ab,bc->ac', U, s, optimize=True)
+    s = np.nan_to_num(s, nan=0.0, posinf=0.0, neginf=0.0)
     psi = s.reshape([2, 2] + [2] * (N - 2))
     psi = np.moveaxis(psi, [0, 1], [i, j])
-    return psi.reshape(1 << N)
+    out = psi.reshape(1 << N)
+    out = np.nan_to_num(out, nan=0.0, posinf=0.0, neginf=0.0)
+    return out
 
 def apply_rx_all(state, beta, N):
     psi = state.reshape([2] * N)
     U = rx(2 * beta)
     for i in range(N):
         psi = np.tensordot(U, psi, axes=[[1], [i]])
-    return psi.reshape(1 << N)
+    psi = np.nan_to_num(psi, nan=0.0, posinf=0.0, neginf=0.0)
+    out = psi.reshape(1 << N)
+    out = np.nan_to_num(out, nan=0.0, posinf=0.0, neginf=0.0)
+    return out
+
+def apply_warm_start_mixer(state, beta, thetas, N):
+    """
+    Implements the Modified Mixer from Egger et al. (2021), Eq. 2.
+    Unitary: Prod_i [ Ry(theta_i) Rz(-2*beta) Ry(-theta_i) ]
+    
+    CRITICAL: This rotation sequence preserves the initial state |phi_0>
+    as the ground state of the mixer Hamiltonian H_M^(ws).
+    """
+    psi = state.reshape([2] * N)
+    for i in range(N):
+        U1 = ry(-thetas[i])
+        psi = np.tensordot(U1, psi, axes=[[1], [i]])
+        U2 = rz(-2.0 * beta)
+        psi = np.tensordot(U2, psi, axes=[[1], [i]])
+        U3 = ry(thetas[i])
+        psi = np.tensordot(U3, psi, axes=[[1], [i]])
+    psi = np.nan_to_num(psi, nan=0.0, posinf=0.0, neginf=0.0)
+    out = psi.reshape(1 << N)
+    out = np.nan_to_num(out, nan=0.0, posinf=0.0, neginf=0.0)
+    return out
 
 def apply_xy_ring(state, beta, N, T):
     U = xy_unitary(4 * beta / T)
@@ -87,6 +129,10 @@ def apply_xy_ring(state, beta, N, T):
         for i in range(1, N - 1, 2):
             psi = apply_two_qubit(psi, U, i, i + 1, N)
         psi = apply_two_qubit(psi, U, N - 1, 0, N)
+    psi = np.nan_to_num(psi, nan=0.0, posinf=0.0, neginf=0.0)
+    norm = np.linalg.norm(psi)
+    if norm > 1e-12:
+        psi = psi / norm
     return psi
 
 def apply_xy_qampa(state, beta, N, T, K):
@@ -116,9 +162,11 @@ def phase_separator(state, energies, theta):
             continue
     return psi
 
-def qaoa_layer(state, energies, N, beta, mixer, T):
+def qaoa_layer(state, energies, N, beta, mixer, T, thetas=None):
     if mixer == "x":
         return apply_rx_all(state, beta, N)
+    if mixer == "ws" and thetas is not None:
+        return apply_warm_start_mixer(state, beta, thetas, N)
     return apply_xy_ring(state, beta, N, T)
 
 def qaoa_expectation_ops(psi0, energies, N, theta, ops, T=1):
@@ -196,7 +244,7 @@ def apply_noise(probs, model, p, N):
         return apply_phaseflip(probs, p, N)
     return probs
 
-def qaoa_expectation_shots(psi0, energies, N, K, theta, mixer="xy", T=1, shots=1024, noise_p=0.0, noise_model="depolarizing"):
+def qaoa_expectation_shots(psi0, energies, N, K, theta, mixer="xy", T=1, shots=1024, noise_p=0.0, noise_model="depolarizing", thetas=None):
     g, b = np.split(theta, 2)
     psi = psi0.copy()
     for t in range(len(g)):
@@ -205,7 +253,7 @@ def qaoa_expectation_shots(psi0, energies, N, K, theta, mixer="xy", T=1, shots=1
         if mixer == "qampa":
             psi = apply_xy_qampa(psi, b[t], N, T, K)
         else:
-            psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
+            psi = qaoa_layer(psi, energies, N, b[t], mixer, T, thetas)
     probs = np.real(psi.conj() * psi)
     probs = probs / max(probs.sum(), 1e-12)
     dim = probs.shape[0]
@@ -220,7 +268,7 @@ def qaoa_expectation_shots(psi0, energies, N, K, theta, mixer="xy", T=1, shots=1
     est = est / max(shots, 1)
     return est
 
-def qaoa_cvar_shots(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, shots=1024, noise_p=0.0, noise_model="depolarizing"):
+def qaoa_cvar_shots(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, shots=1024, noise_p=0.0, noise_model="depolarizing", thetas=None):
     g, b = np.split(theta, 2)
     psi = psi0.copy()
     for t in range(len(g)):
@@ -229,7 +277,7 @@ def qaoa_cvar_shots(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, shots=1
         if mixer == "qampa":
             psi = apply_xy_qampa(psi, b[t], N, T, K)
         else:
-            psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
+            psi = qaoa_layer(psi, energies, N, b[t], mixer, T, thetas)
     probs = np.real(psi.conj() * psi)
     probs = probs / max(probs.sum(), 1e-12)
     dim = probs.shape[0]
@@ -248,13 +296,13 @@ def qaoa_cvar_shots(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, shots=1
         s += samples[order[k]]
     return float(s / max(thr, 1))
 
-def evolve_state(psi0, energies, N, theta, mixer="xy", T=1):
+def evolve_state(psi0, energies, N, theta, mixer="xy", T=1, thetas=None):
     g, b = np.split(theta, 2)
     psi = psi0.copy()
     for t in range(len(g)):
         phase = np.exp(-1j * g[t] * energies)
         psi = psi * phase
-        psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
+        psi = qaoa_layer(psi, energies, N, b[t], mixer, T, thetas)
     return psi
 
 def evolve_state_ops(psi0, energies, N, theta, ops, T=1):
@@ -282,7 +330,7 @@ def compute_overlap(psi, z_opt, noise_p=0.0, shots=0, noise_model="depolarizing"
         return float(counts[z_opt] / max(shots, 1))
     return float(probs[z_opt])
 
-def qaoa_expectation(psi0, energies, N, K, theta, mixer="xy", T=1, noise_model="depolarizing", noise_p=0.0):
+def qaoa_expectation(psi0, energies, N, K, theta, mixer="xy", T=1, noise_model="depolarizing", noise_p=0.0, thetas=None):
     g, b = np.split(theta, 2)
     psi = psi0.copy()
     for t in range(len(g)):
@@ -291,12 +339,13 @@ def qaoa_expectation(psi0, energies, N, K, theta, mixer="xy", T=1, noise_model="
         if mixer == "qampa":
             psi = apply_xy_qampa(psi, b[t], N, T, K)
         else:
-            psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
+            psi = qaoa_layer(psi, energies, N, b[t], mixer, T, thetas)
     probs = np.real(psi.conj() * psi)
     probs = apply_noise(probs, noise_model, noise_p, N)
+    probs = probs / max(probs.sum(), 1e-12)
     return float((probs * energies).sum())
 
-def qaoa_cvar(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, noise_model="depolarizing", noise_p=0.0):
+def qaoa_cvar(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, noise_model="depolarizing", noise_p=0.0, thetas=None):
     g, b = np.split(theta, 2)
     psi = psi0.copy()
     for t in range(len(g)):
@@ -305,9 +354,10 @@ def qaoa_cvar(psi0, energies, N, K, theta, alpha, mixer="xy", T=1, noise_model="
         if mixer == "qampa":
             psi = apply_xy_qampa(psi, b[t], N, T, K)
         else:
-            psi = qaoa_layer(psi, energies, N, b[t], mixer, T)
+            psi = qaoa_layer(psi, energies, N, b[t], mixer, T, thetas)
     probs = np.real(psi.conj() * psi)
     probs = apply_noise(probs, noise_model, noise_p, N)
+    probs = probs / max(probs.sum(), 1e-12)
     idx = np.argsort(energies)[::-1]
     cum = np.cumsum(probs[idx])
     thr = alpha

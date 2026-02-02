@@ -26,6 +26,11 @@ def run_experiment(pipeline, config, writer):
     noise_model = config.get('noise_model', 'depolarizing')
     penalty = config.get('penalty', 100.0)
     seed = config.get('seed', 12345)
+    tickers = config.get('tickers')
+    start = config.get('start')
+    end = config.get('end')
+    objective = config.get('objective', 'expectation')
+    solver = config.get('solver', 'miqp')
     
     # Update pipeline seed
     pipeline.seed = seed
@@ -37,14 +42,14 @@ def run_experiment(pipeline, config, writer):
             res = pipeline.run_standard(
                 N=N, K=K, q=0.5, p=p, mixer=mixer, warm_start=warm,
                 formulation=form, shots=shots, noise_p=noise_p, noise_model=noise_model,
-                solver='miqp', penalty=penalty
+                solver=solver, penalty=penalty, tickers=tickers, start=start, end=end, objective=objective
             )
             layers = p
         else:
             res = pipeline.run_adapt(
                 N=N, K=K, q=0.5, max_layers=p, mixer=mixer, warm_start=warm,
                 formulation=form, pool='pairs', shots=shots, noise_p=noise_p, noise_model=noise_model,
-                penalty=penalty
+                penalty=penalty, tickers=tickers, start=start, end=end, objective=objective
             )
             layers = res['layers']
             
@@ -73,6 +78,15 @@ def main():
     
     pipeline = PortfolioPipeline()
     seeds = [10, 20, 30, 40, 50]
+    # Historical data configuration
+    tickers_pool = [
+        'AAPL','MSFT','GOOGL','AMZN','META','TSLA','NVDA','JPM','V','UNH',
+        'HD','MA','PG','BAC','XOM','PFE','KO','DIS','PEP','CSCO',
+        'NFLX','ADBE','INTC','NKE','CRM','ABBV','TMO','AVGO','ORCL','ACN',
+        'COST','WMT','MCD','AMD','QCOM','TXN','LIN','CVX','MRK','AMAT'
+    ]
+    start = '2021-01-01'
+    end = '2025-12-31'
     
     with open(out_csv, 'w', newline='') as f:
         writer = csv.writer(f)
@@ -91,21 +105,30 @@ def main():
                     current_seeds = seeds
                 
                 for seed in current_seeds:
-                    cfg = {'N': N, 'mode': mode, 'p': 2, 'mixer': 'xy', 'warm_start': False, 'seed': seed}
+                    cfg = {
+                        'N': N, 'mode': mode, 'p': 2, 'mixer': 'xy', 'warm_start': False, 'seed': seed,
+                        'tickers': tickers_pool[:N], 'start': start, 'end': end, 'objective': 'expectation'
+                    }
                     run_experiment(pipeline, cfg, writer)
                 
         # 2. Warm Start: N=20 (Increased from 12)
         print("\n--- Experiment 2: Warm Start (Multi-Seed) ---")
         for warm in [False, True]:
             for seed in seeds[:3]: # Limit seeds for deep dives
-                cfg = {'N': 20, 'mode': 'standard', 'p': 1, 'mixer': 'xy', 'warm_start': warm, 'seed': seed}
+                cfg = {
+                    'N': 20, 'mode': 'standard', 'p': 1, 'mixer': 'xy', 'warm_start': warm, 'seed': seed,
+                    'tickers': tickers_pool[:20], 'start': start, 'end': end, 'objective': 'expectation'
+                }
                 run_experiment(pipeline, cfg, writer)
             
         # 3. Mixers: N=16 (Increased from 10)
         print("\n--- Experiment 3: Mixers (Multi-Seed) ---")
         for mixer in ['x', 'xy', 'qampa']:
             for seed in seeds[:3]:
-                cfg = {'N': 16, 'mode': 'standard', 'p': 1, 'mixer': mixer, 'warm_start': False, 'penalty': 100.0, 'seed': seed}
+                cfg = {
+                    'N': 16, 'mode': 'standard', 'p': 1, 'mixer': mixer, 'warm_start': False, 'penalty': 100.0, 'seed': seed,
+                    'tickers': tickers_pool[:16], 'start': start, 'end': end, 'objective': 'expectation'
+                }
                 run_experiment(pipeline, cfg, writer)
             
         # 4. Noise Robustness: N=12 (Increased from 10)
@@ -114,8 +137,48 @@ def main():
             for seed in seeds[:3]: 
                 cfg = {
                     'N': 12, 'mode': 'standard', 'p': 1, 'mixer': 'xy', 
-                    'warm_start': False, 'shots': 1024, 'noise_p': np_val, 'noise_model': 'bitflip', 'seed': seed
+                    'warm_start': False, 'shots': 1024, 'noise_p': np_val, 'noise_model': 'bitflip', 'seed': seed,
+                    'tickers': tickers_pool[:12], 'start': start, 'end': end, 'objective': 'expectation'
                 }
+                run_experiment(pipeline, cfg, writer)
+        
+        # 5. Upgraded Module Benchmark: Standard vs ADAPT + Warm + CVaR + XY
+        print("\n--- Experiment 5: Upgraded Module vs Standard ---")
+        for N in [12, 16, 20, 22, 24]:
+            for seed in seeds[:3]:
+                # Standard
+                cfg_std = {
+                    'N': N, 'mode': 'standard', 'p': 2, 'mixer': 'xy', 'warm_start': False, 'formulation': 'mvo', 'seed': seed,
+                    'tickers': tickers_pool[:N], 'start': start, 'end': end, 'objective': 'expectation'
+                }
+                run_experiment(pipeline, cfg_std, writer)
+                # Adapt Cold vs Warm comparisons (objective expectation and cvar)
+                cfg_adapt_cold = {
+                    'N': N, 'mode': 'adapt', 'p': 3, 'mixer': 'xy', 'warm_start': False, 'formulation': 'mvo', 'seed': seed,
+                    'tickers': tickers_pool[:N], 'start': start, 'end': end, 'objective': 'expectation'
+                }
+                run_experiment(pipeline, cfg_adapt_cold, writer)
+                cfg_adapt_warm = {
+                    'N': N, 'mode': 'adapt', 'p': 3, 'mixer': 'xy', 'warm_start': True, 'formulation': 'mvo', 'seed': seed,
+                    'tickers': tickers_pool[:N], 'start': start, 'end': end, 'objective': 'expectation'
+                }
+                run_experiment(pipeline, cfg_adapt_warm, writer)
+                cfg_adapt_warm_cvar = {
+                    'N': N, 'mode': 'adapt', 'p': 3, 'mixer': 'xy', 'warm_start': True, 'formulation': 'mvo', 'seed': seed,
+                    'tickers': tickers_pool[:N], 'start': start, 'end': end, 'objective': 'cvar'
+                }
+                run_experiment(pipeline, cfg_adapt_warm_cvar, writer)
+        
+        # 6. Advanced Problem Benchmarks: MAD and Transaction Costs
+        print("\n--- Experiment 6: Advanced Problems (MAD, Transaction Costs) ---")
+        for form in ['mad', 'mvo_tc']:
+            for seed in seeds[:3]:
+                cfg = {
+                    'N': 12, 'mode': 'standard', 'p': 1, 'mixer': 'xy', 'warm_start': False, 'formulation': form, 'seed': seed,
+                    'tickers': tickers_pool[:12], 'start': start, 'end': end, 'objective': 'expectation'
+                }
+                if form == 'mad':
+                    cfg['solver'] = 'lp'
                 run_experiment(pipeline, cfg, writer)
 
     print(f"\nExperiments completed. Results saved to {out_csv}")

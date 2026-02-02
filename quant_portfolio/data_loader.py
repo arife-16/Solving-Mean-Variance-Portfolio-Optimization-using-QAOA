@@ -8,11 +8,11 @@ def fetch_real_data(tickers, start, end):
     print(f"Fetching {len(tickers)} stocks...")
     data = yf.download(tickers, start=start, end=end, progress=False)
     
-    # Extract only 'Adj Close' prices (not all OHLC data)
+    # Extract only 'Adj Close' prices (YOUR FIX - critical!)
     if isinstance(data.columns, pd.MultiIndex):
-        prices = data['Adj Close']  # Get just adjusted close prices
+        prices = data['Adj Close']
     else:
-        prices = data  # Single ticker case
+        prices = data
     
     print(f"✓ Downloaded {len(prices)} days")
     return prices
@@ -20,32 +20,31 @@ def fetch_real_data(tickers, start, end):
 def compute_returns_from_prices(prices, method='log'):
     """Calculate returns"""
     if method == 'log':
-        returns = np.log(prices / prices.shift(1)).dropna()
+        returns = np.log(prices / prices.shift(1))
     else:
-        returns = (prices / prices.shift(1) - 1).dropna()
+        returns = (prices / prices.shift(1) - 1)
     
-    result = returns.values
-    print(f"DEBUG compute_returns: prices.shape={prices.shape}, result.shape={result.shape}")
-    
-    # If shape is wrong, transpose it
-    if result.shape[0] < result.shape[1]:
-        print(f"DEBUG: Transposing from {result.shape}")
-        result = result.T
-        print(f"DEBUG: After transpose: {result.shape}")
-    
-    return result
+    # COLLEAGUE'S FIX - Handle inf/nan properly
+    returns = returns.replace([np.inf, -np.inf], np.nan).dropna()
+    return returns.values.T  # Return transposed
 
 def annualized_mu_sigma(returns, periods_per_year=252):
     """Annualize mu and sigma"""
-    # returns comes in as (T, N) from compute_returns_from_prices
-    # We need (N, T) for formulations
+    R = np.array(returns, dtype=float)
     
-    # Transpose to (N, T)
-    if returns.shape[0] > returns.shape[1]:
-        returns = returns.T
+    # COLLEAGUE'S FIX - Clean and clip data
+    R = np.nan_to_num(R, nan=0.0, posinf=0.0, neginf=0.0)
+    R = np.clip(R, -1.0, 1.0)
     
-    mu = returns.mean(axis=1) * periods_per_year
-    T = returns.shape[1]
-    centered = returns - returns.mean(axis=1, keepdims=True)
-    sigma = (centered @ centered.T) / (T - 1) * periods_per_year
-    return mu, sigma, returns  # ← Return transposed returns too!
+    mu = R.mean(axis=1) * periods_per_year
+    T = R.shape[1]
+    
+    if T <= 1:
+        sigma = np.zeros((R.shape[0], R.shape[0]), dtype=float)
+        return mu, sigma
+    
+    # Use np.cov for numerical stability
+    sigma = np.cov(R, rowvar=True, bias=False) * periods_per_year
+    sigma = np.nan_to_num(sigma, nan=0.0, posinf=0.0, neginf=0.0)
+    
+    return mu, sigma

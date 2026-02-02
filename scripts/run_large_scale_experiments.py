@@ -61,25 +61,24 @@ def main():
     ]
     
     pipeline = PortfolioPipeline()
-    seeds = [10, 20] # Two seeds for validation
+    seeds = list(range(42, 52))
     
     with open(out_csv, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(headers)
         
-        print("\n--- Large Scale Subspace Experiments ---")
+        print("\n--- Large Scale Subspace Experiments (Scaled) ---")
         
-        # Configurations to run
-        # N=30 cases
-        configs = [
-            {'N': 30, 'K': 2, 'p': 1},
-            {'N': 30, 'K': 5, 'p': 1},
-            {'N': 30, 'K': 10, 'p': 1}, # ~30M states, might take a while
+        configs = []
+        
+        for n in [22, 24, 26, 28]:
+            configs.append({'N': n, 'K': n//2, 'p': 1})
             
-            # N=40 cases
+        configs.extend([
+            {'N': 30, 'K': 15, 'p': 1},
             {'N': 40, 'K': 2, 'p': 1},
-            {'N': 40, 'K': 5, 'p': 1},  # ~658k states
-        ]
+            {'N': 40, 'K': 20, 'p': 1},
+        ])
         
         for config in configs:
             for seed in seeds:

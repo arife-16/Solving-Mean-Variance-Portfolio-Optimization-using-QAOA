@@ -1,7 +1,7 @@
 # Project Report: Rigorous Portfolio Optimization with QAOA
 
 ## Executive Summary
-This project implements a high-performance, hardware-aware quantum optimization pipeline for the Mean-Variance Portfolio Optimization problem. We successfully moved beyond standard "textbook" implementations to address critical challenges in NISQ computing: the "Quantum Cliff" (scalability), connectivity constraints, and the limitations of warm-start protocols.
+This project implements a high-performance, hardware-aware quantum optimization pipeline for the Mean-Variance Portfolio Optimization problem. We aimed to address critical challenges in NISQ computing: the "Quantum Cliff" (scalability), connectivity constraints, and the limitations of warm-start protocols.
 
 **Key Achievements:**
 1.  **True Warm-Start QAOA**: Implemented the rigorous Egger et al. protocol with a modified mixer Hamiltonian that strictly preserves biased initial states, outperforming standard warm-start heuristics.
@@ -61,19 +61,6 @@ We expanded the problem scope beyond Mean-Variance to include:
 *   **Implication**: For financial applications, finding a "basket of good solutions" (CVaR) is a more viable quantum utility target than finding the "single global optimum."
 
 ---
-
-## 4. Codebase Status
-The repository is now a fully featured research platform:
-*   **`quant_portfolio/`**:
-    *   `portfolio_pipeline.py`: Robust orchestrator with fallback logic.
-    *   `qaoa_core.py`: Optimized NumPy backend with WS-Mixer support.
-    *   `adapt_qaoa.py`: Gradient-based adaptive ansatz generation.
-    *   `mip.py`: Classical relaxation solvers (Scipy/CVXPY).
-*   **`scripts/`**:
-    *   `run_final_validation.py`: End-to-end experiment suite ($N=12$ to $24$).
-    *   `benchmark_*.py`: Isolated tests for runtime, transpilation, and formulations.
-*   **`results/`**:
-    *   Comprehensive CSV datasets and high-quality plots for reporting.
 
 ## 5. Future Roadmap
 1.  **Subspace Expansion**: Integrating $K$-hot subspace restrictions directly into the ansatz for $N > 30$.
